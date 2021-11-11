@@ -6,7 +6,7 @@
 #SDA - SDA (3 - Board)
 
 
-from Kalman import KalmanAngle
+from .Kalman import KalmanAngle
 import smbus2			#import SMBus module of I2C
 import time
 import math
@@ -55,7 +55,7 @@ class AngleMeterAlpha:
 		bus = smbus2.SMBus(1) 	# or bus = smbus.SMBus(0) for older version boards
 		DeviceAddress = 0x68   # MPU6050 device address
 
-		def measureAngles(self):
+		def measureAngles(self, loop=False):
 				flag = 0
 				kalmanX = KalmanAngle()
 				kalmanY = KalmanAngle()
@@ -178,6 +178,8 @@ class AngleMeterAlpha:
 							self.compl_roll = compAngleX
 							#print(str(roll)+"  "+str(gyroXAngle)+"  "+str(compAngleX)+"  "+str(kalAngleX)+"  "+str(pitch)+"  "+str(gyroYAngle)+"  "+str(compAngleY)+"  "+str(kalAngleY))
 							time.sleep(0.005)
+							if not loop:
+								break
 
 						except Exception as exc:
                                                     if(flag == 100):
@@ -195,10 +197,11 @@ class AngleMeterAlpha:
 			self.compl_roll = 0
 			self.kalman_pitch = 0
 			self.kalman_roll = 0
+			
 
 		def measure(self):
-			angleThread = threading.Thread(target=self.measureAngles)
-			angleThread.start()
+			self.angleThread = threading.Thread(target=self.measureAngles)
+			self.angleThread.start()
 
 		def getRoll(self):
 			return self.roll
@@ -223,4 +226,5 @@ class AngleMeterAlpha:
 
 		def get_kalman_pitch(self):
 			return int(self.kalman_pitch)
+
 
