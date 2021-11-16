@@ -12,8 +12,12 @@ def home():
     return render_template("home.html")
 
 def open():
-    subprocess.call(["client", "open"])
+    ret = subprocess.check_output(["client"])
+    print("Ret:", ret)
+
+def open():
+    subprocess.call(["client", "close"])
 
 if __name__ == "__main__":
-    app.run(debug=True)
-    # open()
+    # app.run(debug=True)
+    open()
