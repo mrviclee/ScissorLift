@@ -80,8 +80,20 @@ std::string run_cmd(int sock, std::string cmd, bool failOnError=true, bool logEr
     if (msg != "True") {
         if (logError)
             log_error("Failed running command \"" + cmd + "\" error code: " + msg);
-        if (failOnError)
-            exit(1);
+        if (failOnError){
+            swtich(cmd){
+                case "is_level":
+                    exit(1);
+                case "open":
+                    exit(2);
+                case "is_open":
+                    exit(3);
+                case "lift:1000":
+                    exit(4);
+                case "lower:1000":
+                    exit(5);
+            }
+        }
     }
     return msg;
 }
@@ -165,22 +177,6 @@ int main(int argc, char *argv[])
         std::cerr << "Error while connecting socket\n";
         return -5;
     }
-
-    if (argc != 2) {
-        log_error("Enter close or open");
-        exit(1);
-    }
-    std::string param = std::string(argv[1]);
-
-    if (param == "open") {
-        open_proc(sockFD);
-    } else if (param == "close") {
-        close_proc(sockFD);
-    } else {
-        return 1;
-    }
-
-    exit(0);
 
     std::string in = "";
     char value;
