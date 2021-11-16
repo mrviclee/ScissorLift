@@ -34,26 +34,25 @@ error_map = {
 
 @app.route("/", methods=["GET", "POST"])
 def home():
-    open()
-    if request.method == "POST":
-        print("Post")
-    else:
-        print("Hello")
-    return render_template("test.html")
+    return render_template("home.html", result = {'phy':50,'che':60,'maths':70})
 
+
+def move_lid(instruction):
+    ret = subprocess.call(f"./client {instruction}", shell=True)
+    if (ret != 0):
+        if ret not in error_map:
+            ret = 255
+        error_map[ret]()
+
+@app.route("/open.html", methods=["GET", "POST"])
 def open():
-    ret = subprocess.call("./client", shell=True)
-    if (ret != 0):
-        if ret not in error_map:
-            ret = 255
-        error_map[ret]()
+    move_lid("open")
+    return render_template("home.html")
 
+@app.route("/close.html", methods=["GET", "POST"])
 def close():
-    ret = subprocess.call("./client close", shell=True)
-    if (ret != 0):
-        if ret not in error_map:
-            ret = 255
-        error_map[ret]()
+    move_lid("close")
+    return render_template("home.html", result = {'phy':50,'che':60,'maths':70})
 
 if __name__ == "__main__":
     app.run(debug=True)
