@@ -1,4 +1,4 @@
-from lift.main import cleanup, move_up, move_down, yeet, cleanup
+from lift.main import cleanup, move_up, move_down, yeet, cleanup, checkIR
 from lift.main import servo1
 from lift.main import servo2
 from gyro.AngleOMeter import isLevel
@@ -6,17 +6,24 @@ import time
 import socket
 import sys
 
-def lift():
-    print("Opening box")
-    UpperLimit = "No"
-    UpperLimit = move_up(servo1, UpperLimit, 1000)
-    code = UpperLimit.split(":")[0]
+def move(func, timeout):
+    timeout = int(timeout)
+    print(f"Calling {func}.")
+    limit = "No"
+    limit = func(servo1, limit, timeout)
+    code = limit.split(":")[0]
     if code != "Success":
-        return UpperLimit.split(":")[1]
+        return limit.split(":")[1]
     return True
 
+def lift(timeout="1000"):
+    return move(move_up, timeout)
+
+def lower(timeout="1000"):
+    return move(move_down, timeout)
+
 def open_lid():
-    yeet(servo2, 1.6)
+    yeet(servo2, 1)
     return True
 
 def close_box():
@@ -25,7 +32,7 @@ def close_box():
     move_down(servo1, 'No')
 
 def is_open():
-    return False
+    return checkIR()
 
 def is_go(conn=None):
     #conn.setblocking(0)
@@ -93,7 +100,8 @@ if __name__ == "__main__":
         "is_level" : isLevel,
         "is_open" : is_open,
         "open" : open_lid,
-        "" : do_nothing
+        "" : do_nothing,
+        "lower" : lower
     }
 
     handle_connection(conn, function_map)
