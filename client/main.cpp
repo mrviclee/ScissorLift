@@ -80,8 +80,13 @@ std::string run_cmd(int sock, std::string cmd, bool failOnError=true, bool logEr
     if (msg != "True") {
         if (logError)
             log_error("Failed running command \"" + cmd + "\" error code: " + msg);
-        if (failOnError)
-            exit(1);
+        if (failOnError){
+            if(cmd == "is_level")exit(1);
+            if(cmd == "open")exit(2);
+            if(cmd == "is_open")exit(3);
+            if(cmd == "lift:1000")exit(4);
+            if(cmd == "lower:1000")exit(5);
+        }
     }
     return msg;
 }

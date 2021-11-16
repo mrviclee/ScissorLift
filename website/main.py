@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request
+import subprocess
 
 app = Flask(__name__)
 
@@ -8,7 +9,7 @@ def home():
 
 @app.route("/open.html", methods=["GET", "POST"])
 def open():
-    print("run code to open box")
+    subprocess.call(["client", "open"])
     return render_template("home.html")
 
 @app.route("/close.html", methods=["GET", "POST"])
