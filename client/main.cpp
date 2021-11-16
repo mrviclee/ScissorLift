@@ -34,11 +34,39 @@ std::vector<std::string> split(std::string s, std::string sep, int num) {
     return rvalue;
 }
 
+std::string listen(int socket){
+    std::vector<std::string> arr;
+    std::string reply(1024, 0);
+    while (true) {
+
+        // recv() call tries to get the response from server
+        // BUT there's a catch here, the response might take multiple calls
+        // to recv() before it is completely received
+        // will be demonstrated in another example to keep this minimal
+        auto bytes_recv = recv(socket, &reply.front(), reply.size(), 0);
+        if (bytes_recv == -1) {
+            std::cerr << "Error while receiving bytes\n";
+            return "-6";
+        }
+
+        arr = split(reply, ":", 2);
+        if (arr.size() < 2) {
+            std::cerr << "Invalid message from server: " << reply << std::endl;
+            continue;
+        }
+
+        std::cout << "Type: " << arr.at(0) << ". Msg: " << arr.at(1) << std::endl;
+        if (arr.at(0) == "msg"){
+             return arr.at(1).substr(0,4);
+        }
+    }
+}
+
 int main(int argc, char *argv[])
 {
     // Now we're taking an ipaddress and a port number as arguments to our program
-    char ipAddress[] = "127.0.0.1";
-    char portNum[]  = "5050";
+    char ipAddress[] = "raspberrypi";
+    char portNum[]  = "6000";
 
     addrinfo hints, *p;
     memset(&hints, 0, sizeof(hints));
@@ -82,26 +110,46 @@ int main(int argc, char *argv[])
 
     std::vector<std::string> arr;
     std::string reply(1024, 0);
-    while (true) {
 
-        // recv() call tries to get the response from server
-        // BUT there's a catch here, the response might take multiple calls
-        // to recv() before it is completely received
-        // will be demonstrated in another example to keep this minimal
-        auto bytes_recv = recv(sockFD, &reply.front(), reply.size(), 0);
-        if (bytes_recv == -1) {
-            std::cerr << "Error while receiving bytes\n";
-            return -6;
-        }
+    
+    std::string check_level_cmd = "is_level\n";
+    std::string open_cmd = "open\n";
+    std::string check_open_cmd = "is_open\n";
+    std::string lift_cmd = "lift:100000\n";
+    std::string close_cmd = "close\n";
 
-        arr = split(reply, ":", 2);
-        if (arr.size() < 2) {
-            std::cerr << "Invalid message from server: " << reply << std::endl;
-            continue;
-        }
+    write(sockFD, check_level_cmd.c_str(), check_level_cmd.size());
+    std::string is_level = "";
+    std::string opened = "";
+    std::string is_open = "";
+    std::string lifted = "";
 
-        std::cout << "Type: " << arr.at(0) << ". Msg: " << arr.at(1) << std::endl;
+    is_level = listen(sockFD);
+    if (is_level != "True"){
+        return -1;
     }
+    write(sockFD, open_cmd.c_str(), open_cmd.size());
+    opened = listen(sockFD);
+    if (opened != "True"){
+        return -1;
+    }
+    write(sockFD, check_open_cmd.c_str(), check_open_cmd.size());
+    is_open = listen(sockFD);
+    if (is_open != "True"){
+        return -1;
+    }
+    write(sockFD, lift_cmd.c_str(), lift_cmd.size());
+    lifted = listen(sockFD);
+    int lifted_times = 0;
+    while(lifted == "time" && lifted_times < 2){
+        lifted_times++;
+        write(sockFD, lift_cmd.c_str(), lift_cmd.size());
+        lifted = listen(sockFD);
+    }
+    if (lifted != "True"){
+        return -1;
+    }
+
     close(sockFD);
     freeaddrinfo(p);
 
