@@ -166,11 +166,21 @@ int main(int argc, char *argv[])
         return -5;
     }
 
-    open_proc(sockFD);
-    sleep(3);
-    close_proc(sockFD);
-
-
+    std::string in = "";
+    char value;
+    while (in != "q") {
+        std::cout << "Press \"O\" to open and \"C\" to close.  Press \"q\" to quit." << std::endl;
+        std::cin >> in;
+        value = in.at(0);
+        value = tolower(value);
+        if (value == 'o') {
+            std::cout << "Starting open process." << std::endl;
+            open_proc(sockFD);
+        } else if (value == 'c') {
+            std::cout << "Starting close process." << std::endl;
+            close_proc(sockFD);
+        }
+    }
     close(sockFD);
     freeaddrinfo(p);
 
