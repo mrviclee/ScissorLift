@@ -166,6 +166,22 @@ int main(int argc, char *argv[])
         return -5;
     }
 
+    if (argc != 2) {
+        log_error("Enter close or open");
+        exit(1);
+    }
+    std::string param = std::string(argv[1]);
+
+    if (param == "open") {
+        open_proc(sockFD);
+    } else if (param == "close") {
+        close_proc(sockFD);
+    } else {
+        return 1;
+    }
+
+    exit(0);
+
     std::string in = "";
     char value;
     while (in != "q") {
