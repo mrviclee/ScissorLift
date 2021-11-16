@@ -171,6 +171,22 @@ int main(int argc, char *argv[])
         return -5;
     }
 
+    if (argc != 2) {
+        log_error("Please pass open or close.");
+        exit(-1);
+    }
+
+    if (strcmp(argv[1], "open") == 0) {
+        open_proc(sockFD);
+    } else if (strcmp(argv[1], "close") == 0) {
+        close_proc(sockFD);
+    } else {
+        log_error("Arguement not valid.");
+        exit(-1);
+    }
+
+    exit(0);
+
     std::string in = "";
     char value;
     while (in != "q") {
