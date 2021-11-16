@@ -1,18 +1,9 @@
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
+{% extends 'base.html' %}
 
-    <form method ="post" action="/open.html">
-        <button type="submit" name="Open" value="open"> Open </button>
-    </form> 
-    <form method ="post" action="/close.html">
-        <button type="submit" name="Close" value="close"> Close </button>
-    </form> 
+{% block content %}
 
-</body>
-</html>
+{% include 'test.html' %}
+
+{% endblock %}
+
+
