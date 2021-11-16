@@ -52,22 +52,20 @@ def wait_check_socket(conn):
 def move_up(servo, UpperLimit, conn=None):
     #Move the slider to raise the scissor
     while UpperLimit == 'No':
+        servo.motorMode(1000)
         if GPIO.input(22) == False:
             UpperLimit = 'Yes'
             servo.motorMode(0)
         # print ('going up')
-        servo.motorMode(1000)
-        wait_check_socket(conn)
 
 def move_down(servo, LowerLimit, conn=None):
     #Move Slider to lower the scissor
     while LowerLimit == 'No':
+        servo.motorMode(-1000)
         if GPIO.input(23) == False:
             LowerLimit = 'Yes'
             servo.motorMode(0)
         # print ('going down')
-        servo.motorMode(-1000)
-        wait_check_socket(conn)
         
 if __name__ == "__main__":
     # This sets the switch check to No and turnes off the motor
