@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <algorithm>
 
 #include <arpa/inet.h>
 #include <netdb.h>
@@ -55,11 +56,71 @@ std::string listen(int socket){
             continue;
         }
 
-        std::cout << "Type: " << arr.at(0) << ". Msg: " << arr.at(1) << std::endl;
         if (arr.at(0) == "msg"){
-             return arr.at(1).substr(0,4);
+            std::string rvalue = arr.at(1);
+            rvalue.erase(std::find(rvalue.begin(), rvalue.end(), '\0'), rvalue.end());
+            return rvalue;
         }
     }
+}
+
+void log_error(std::string msg="") {
+    std::cerr << "ERROR: " << msg << std::endl;
+}
+
+void log_message(std::string msg="") {
+    std::cout << "MESSAGE: " << msg;
+}
+
+std::string run_cmd(int sock, std::string cmd, bool failOnError=true, bool logError = true) {
+    std::string msg = cmd;
+    msg = cmd + "\n";
+    write(sock, cmd.c_str(), cmd.size());
+    msg = listen(sock);
+    if (msg != "True") {
+        if (logError)
+            log_error("Failed running command \"" + cmd + "\" error code: " + msg);
+        if (failOnError)
+            exit(1);
+    }
+    return msg;
+}
+
+std::string move(int sock, std::string cmd, std::string timeout) {
+    bool failOnFailure = false;
+    std::string ret = "timeout";
+    printf("Running %s", cmd.c_str());
+    int iTimeout = 0;
+    std::string interval = "1000";
+    while(ret == "timeout" && iTimeout < std::atoi(timeout.c_str())){
+        ret = run_cmd(sock, cmd + ":" + interval, failOnFailure, false);
+        printf(".");
+        fflush(stdout);
+        iTimeout += std::atoi(interval.c_str());
+    }
+    printf("\n");
+    fflush(stdout);
+    return ret;
+}
+
+void open_proc(int sock) {
+    std::vector<std::string> arr;
+    std::string reply(1024, 0);
+
+    std::string ret;
+    run_cmd(sock, "is_level");
+    
+    ret = run_cmd(sock, "is_open", false);
+    if (ret != "True")
+        run_cmd(sock, "open");
+    run_cmd(sock, "is_open");
+    
+    move(sock, "lift", "150000");
+    
+}
+
+void close_proc(int sock) {
+    move(sock, "lower", "150000");
 }
 
 int main(int argc, char *argv[])
@@ -105,50 +166,10 @@ int main(int argc, char *argv[])
         return -5;
     }
 
-    std::string msg = "Hello World!\n";
-    write(sockFD, msg.c_str(), msg.size());
+    open_proc(sockFD);
+    sleep(3);
+    close_proc(sockFD);
 
-    std::vector<std::string> arr;
-    std::string reply(1024, 0);
-
-    
-    std::string check_level_cmd = "is_level\n";
-    std::string open_cmd = "open\n";
-    std::string check_open_cmd = "is_open\n";
-    std::string lift_cmd = "lift:100000\n";
-    std::string close_cmd = "close\n";
-
-    write(sockFD, check_level_cmd.c_str(), check_level_cmd.size());
-    std::string is_level = "";
-    std::string opened = "";
-    std::string is_open = "";
-    std::string lifted = "";
-
-    is_level = listen(sockFD);
-    if (is_level != "True"){
-        return -1;
-    }
-    write(sockFD, open_cmd.c_str(), open_cmd.size());
-    opened = listen(sockFD);
-    if (opened != "True"){
-        return -1;
-    }
-    write(sockFD, check_open_cmd.c_str(), check_open_cmd.size());
-    is_open = listen(sockFD);
-    if (is_open != "True"){
-        return -1;
-    }
-    write(sockFD, lift_cmd.c_str(), lift_cmd.size());
-    lifted = listen(sockFD);
-    int lifted_times = 0;
-    while(lifted == "time" && lifted_times < 2){
-        lifted_times++;
-        write(sockFD, lift_cmd.c_str(), lift_cmd.size());
-        lifted = listen(sockFD);
-    }
-    if (lifted != "True"){
-        return -1;
-    }
 
     close(sockFD);
     freeaddrinfo(p);
