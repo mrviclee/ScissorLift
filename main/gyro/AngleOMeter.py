@@ -11,6 +11,7 @@ from .AngleMeterAlpha import AngleMeterAlpha
 
 
 def isLevel():
+    return True # TODO: Remove this
     angleMeter = AngleMeterAlpha()
     angleMeter.measure()
     time.sleep(2)
