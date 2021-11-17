@@ -9,9 +9,8 @@ import time
 
 from .AngleMeterAlpha import AngleMeterAlpha
 
-
+# TODO: reduce time to measure GYRO
 def isLevel():
-    return True # TODO: Remove this
     angleMeter = AngleMeterAlpha()
     angleMeter.measure()
     time.sleep(2)
@@ -20,4 +19,4 @@ def isLevel():
     pitch = abs(angleMeter.get_int_pitch())
 
     angleMeter.angleThread.join
-    return roll < 30 and pitch < 30
+    return roll < 15 and pitch < 15

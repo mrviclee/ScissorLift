@@ -55,4 +55,4 @@ def close():
     return render_template("home.html", result = {'phy':50,'che':60,'maths':70})
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", debug=True)
