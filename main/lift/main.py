@@ -1,5 +1,8 @@
-import RPi.GPIO as GPIO
-from .lx16a import *
+if __debug__:
+    import RPi.GPIO as GPIO
+    from .lx16a import *
+else:
+    from .fake_lx16a import *
 import signal
 import socket
 import sys
@@ -15,11 +18,12 @@ servo1 = LX16A(1)
 servo2 = LX16A(2)
 
 # This setups the GPIO for the two limit switches
-GPIO.setmode(GPIO.BCM)
-GPIO.setwarnings(False)
-GPIO.setup(22, GPIO.IN, pull_up_down=GPIO.PUD_UP)  #Down Stop
-GPIO.setup(23, GPIO.IN, pull_up_down=GPIO.PUD_UP)  #Up Stop
-GPIO.setup(26, GPIO.IN, pull_up_down=GPIO.PUD_UP)  #IR Sensor, high = something blocking.
+if __debug__:
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setwarnings(False)
+    GPIO.setup(22, GPIO.IN, pull_up_down=GPIO.PUD_UP)  #Down Stop
+    GPIO.setup(23, GPIO.IN, pull_up_down=GPIO.PUD_UP)  #Up Stop
+    GPIO.setup(26, GPIO.IN, pull_up_down=GPIO.PUD_UP)  #IR Sensor, high = something blocking or not plugged in.
 
 
 def cleanup():

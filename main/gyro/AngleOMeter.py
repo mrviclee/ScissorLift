@@ -7,11 +7,13 @@
 
 import time
 
-from .AngleMeterAlpha import AngleMeterAlpha
+if __debug__:
+    from .AngleMeterAlpha import AngleMeterAlpha
 
 
 def isLevel():
-    return True # TODO: Remove this
+    if not __debug__:
+        return True
     angleMeter = AngleMeterAlpha()
     angleMeter.measure()
     time.sleep(2)

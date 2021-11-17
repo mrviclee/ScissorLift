@@ -5,6 +5,10 @@ from gyro.AngleOMeter import isLevel
 import time
 import socket
 import sys
+from time import sleep
+import asyncio
+import websockets
+import functools
 
 def move(func, timeout):
     timeout = int(timeout)
@@ -53,12 +57,25 @@ def do_nothing():
     pass
     return ""
 
-def handle_connection(conn, function_map):
+function_map = {
+        "hello" : get_hello,
+        "lift" : lift,
+        "close" : close_box,
+        "is_level" : isLevel,
+        "is_open" : is_open,
+        "open" : open_lid,
+        "" : do_nothing,
+        "lower" : lower
+    }
+
+async def handle_connection(conn):
      while(True):
-        msg = conn.recv(1024)
+        msg = await conn.recv()
         if not msg:
+            print("Breaking due to no message.")
             break
-        msg = msg.decode().strip()
+        # msg = msg.decode().strip()
+        msg = msg.strip()
         params = []
         if len(msg.split(":")) > 1:
             params = msg.split(":")[1].split(",")
@@ -82,28 +99,13 @@ def handle_connection(conn, function_map):
             print("WARNING: invalid command:", msg)
             continue
 
-        conn.send(reply.encode())
+        await conn.send(reply)
 
 if __name__ == "__main__":
-    port = int(sys.argv[1]) if len(sys.argv) >= 2 else 5000
+    port = int(sys.argv[1]) if len(sys.argv) >= 2 else 5050
 
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     print(f"Listing on port {port}.")
-    s.bind(("0.0.0.0", port))
-    s.listen(5)
-    conn, address = s.accept()
+    start_server = websockets.serve(handle_connection, 'localhost', port)
 
-    function_map = {
-        "hello" : get_hello,
-        "lift" : lift,
-        "close" : close_box,
-        "is_level" : isLevel,
-        "is_open" : is_open,
-        "open" : open_lid,
-        "" : do_nothing,
-        "lower" : lower
-    }
-
-    handle_connection(conn, function_map)
-
-    exit(0)
+    asyncio.get_event_loop().run_until_complete(start_server)
+    asyncio.get_event_loop().run_forever()
