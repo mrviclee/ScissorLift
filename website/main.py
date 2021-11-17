@@ -1,8 +1,11 @@
 from flask import Flask, render_template, request, flash
+from flask_socketio import SocketIO
+
 import subprocess
 
 app = Flask(__name__)
 app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
+socketio = SocketIO(app)
 
 
 def not_level():
@@ -55,4 +58,4 @@ def close():
     return render_template("home.html", result = {'phy':50,'che':60,'maths':70})
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    socketio.run(app)
