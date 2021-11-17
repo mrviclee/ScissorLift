@@ -105,7 +105,7 @@ if __name__ == "__main__":
     port = int(sys.argv[1]) if len(sys.argv) >= 2 else 5050
 
     print(f"Listing on port {port}.")
-    start_server = websockets.serve(handle_connection, 'localhost', port)
+    start_server = websockets.serve(handle_connection, '0.0.0.0', port)
 
     asyncio.get_event_loop().run_until_complete(start_server)
     asyncio.get_event_loop().run_forever()
