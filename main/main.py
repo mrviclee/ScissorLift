@@ -70,12 +70,12 @@ function_map = {
 
 async def handle_connection(conn):
      while(True):
-        msg = await conn.recv()
-        if not msg:
-            print("Breaking due to no message.")
+        try:
+            msg = await conn.recv()
+        except websockets.exceptions.ConnectionClosedError:
             break
-        # msg = msg.decode().strip()
         msg = msg.strip()
+        print(f" <-- {msg}")
         params = []
         if len(msg.split(":")) > 1:
             params = msg.split(":")[1].split(",")
@@ -100,6 +100,7 @@ async def handle_connection(conn):
             continue
 
         await conn.send(reply)
+        print(f" --> {reply}")
 
 if __name__ == "__main__":
     port = int(sys.argv[1]) if len(sys.argv) >= 2 else 5050

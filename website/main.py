@@ -1,12 +1,12 @@
 from threading import Lock
 from flask import Flask, render_template, request, flash
-from flask_socketio import SocketIO, emit
+# from flask_socketio import SocketIO, emit
 import subprocess
 
 app = Flask(__name__)
 app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
 
-socketio = SocketIO(app)
+# socketio = SocketIO(app)
 
 def not_level():
     flash("Drone valley is not within safe angle for take off.")
@@ -56,20 +56,18 @@ def close():
     move_lid("close")
     return render_template("home.html", result = {'phy':50,'che':60,'maths':70})
 
-@socketio.on('connect')
-def ws_connect():
-    print("Cliented connected.")
+# @socketio.on('connect')
+# def ws_connect():
+#     print("Cliented connected.")
 
-@socketio.on('disconnect')
-def test_disconnect():
-    print("Client disconnected.")
+# @socketio.on('disconnect')
+# def test_disconnect():
+#     print("Client disconnected.")
 
-@socketio.on("message")
-def recv_message():
-    print("Recv:")
+# @socketio.on("message")
+# def recv_message():
+#     print("Recv:")
 
 if __name__ == '__main__':
-    socketio.run(app)
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", debug=True)
+    app.run(debug=True)
+    # socketio.run(app)
