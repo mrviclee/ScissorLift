@@ -14,77 +14,91 @@
       
 
     <script>
+
         //var socket = io("ws://raspberrypi:5050");
         // const socket = new WebSocket("ws://localhost:5050");
         const gyro_socket = new WebSocket("ws://localhost:5050");
         const ir_socket = new WebSocket("ws://localhost:5051");
+        // var g_val = 0
+
+      $(document).ready(function() {
+
+        const gyro_socket = new WebSocket("ws://localhost:5050");
+        const ir_socket = new WebSocket("ws://localhost:5051");
+
+        var maxWidth = 1500;
+        var duration = 10000;
+        var $log = $('#log');
+        var $open = $('#open');
+        var $stop = $('#stop');
+        var timer;
 
         $(function(){
             $('#open').on('click' , function(){
-            //   socket.send(open)
-              var progressbar = $( "#progressbar-5" );
-              var progressLabel = $( ".progress-label" );
+              // send open command
+              $open.attr('disabled', true);
+              $stop.removeAttr("disabled");
 
-              $( "#progressbar-5" ).progressbar({
-                value: 0,
-                change: function() {
-                  progressLabel.text( 
-                    progressbar.progressbar( "value" ) + "%" );
-                },
-                complete: function() {
-                  progressLabel.text( "Drone is ready to launch!" );
-                }
+              $('#open').removeClass('btn-danger').addClass('btn-success');
+              $('#close').removeClass('btn-success').addClass('btn-danger');
+              $('#stop').removeClass('btn-success').addClass('btn-danger');
+
+              var $bar = $('#bar');
+              Horloge(maxWidth);
+              timer = setInterval('Horloge('+maxWidth+')', 100);
+
+              $bar.animate({
+                  width: maxWidth
+              }, duration, function() {
+                  $(this).css('background-color', 'green');
+                  $log.html('100 %');
+                  clearInterval(timer);
               });
-              function progress() {
-                var val = progressbar.progressbar( "value" ) || 0;
-                progressbar.progressbar( "value", val + 1 );
-                if ( val < 99 ) {
-                  setTimeout( progress, 1050);
-                }
-              }
-              setTimeout( progress, 10);
             });
+          });
+
+        $(function(){
+          // send close command
+          $('#close').on('click' , function(){
+
+            $open.removeAttr("disabled");
+            $stop.removeAttr("disabled");
+
+            $('#close').removeClass('btn-danger').addClass('btn-success');
+            $('#stop').removeClass('btn-success').addClass('btn-danger');
+            $('#open').removeClass('btn-success').addClass('btn-danger');
+          });
         });
 
         $(function(){
-            $('#close').on('click' , function(){
-            //   socket.send(close)
-            console.log(progressbar.text)
-            });
-        });
+          $('#stop').on('click' , function(){
+            // send stop command
 
-        $(function(){
-            $('#stop').on('click' , function(){
-              // socket.send(close)
-              var progressbar = $( "#progressbar-5" );
-              var progressLabel = $( ".progress-label" );
+            $stop.attr('disabled', true);
+            $open.removeAttr("disabled");
 
-              console.log(progressLabel.text);
-              $( "#progressbar-5" ).progressbar({
-                value: 0,
-                change: function() {
-                  progressLabel.text( 
-                    progressbar.progressbar( "value" ) + "%" );
-                },
-                complete: function() {
-                  progressLabel.text( "Drone is ready to launch!" );
-                }
-              });
-              function progress() {
-                var val = progressbar.progressbar( "value" ) || 0;
-                progressbar.progressbar( "value", val + 1 );
-                if ( val < 99 ) {
-                  setTimeout( progress, 1050);
-                }
-              }
-              setTimeout( progress, 10);
-            });
+            $('#stop').removeClass('btn-danger').addClass('btn-success');
+            $('#open').removeClass('btn-success').addClass('btn-danger');
+            $('#close').removeClass('btn-success').addClass('btn-danger');
+
+            var $bar = $('#bar');
+            $bar.stop();
+            console.log("here");
+
+            clearInterval(timer);
+
+            var w = $bar.width();
+            var percent = parseInt((w * 100) / maxWidth);
+            $log.html(percent + ' %');
+          });
         });
+      });
 
         gyro_socket.onmessage = function (event) {
             var obj = JSON.parse(event.data);
             console.log(obj.return);
             $("#gyro-data").html(obj.return);
+            
         }
 
         ir_socket.onmessage = function (event) {
@@ -93,22 +107,28 @@
             $("#ir-data").html(obj.return);
         }
 
+        function Horloge(maxWidth) { var w = $('#bar').width();
+            var percent = parseInt((w * 100) / maxWidth);
+            $('#log').html(percent + ' %');
+        }
+
     </script>
 
 
     <style>
-      .ui-widget-header {
-        background: #cedc98;
-        border: 1px solid #DDDDDD;
-        color: #333333;
-        font-weight: bold;
-      }
       .progress-label {
         position: inherit;
         left: 0%;
         top: 13px;
         font-weight: bold;
         text-shadow: 1px 1px 0 #fff;
+      }
+      #bar {
+        width:0px;
+        height:25px;
+        border:1px solid black;
+        background-color:yellow;
+        border-radius:3px;
       }
     </style>
 
@@ -126,58 +146,45 @@
     </div>
 
     <div class="d-flex justify-content-center my-4">
-        <button id="open" type="submit" name="Open" value="open" class="btn btn-secondary mx-4"> Open </button>
-        <button id="close" type="submit" name="Close" value="close" class="btn btn-secondary mx-4"> Close </button>
-        <button id="stop" type="submit" name="Stop" value="stop" class="btn btn-secondary mx-4"> Stop </button>
-        <!-- <form method ="post" action="/open.html">
-        </form> 
-        <form id="close" method ="post" action="/close.html">
-        </form>  -->
+        <button id="open" type="button" name="Open" value="open" class="btn btn-danger mx-4"> Open </button>
+        <button id="close" type="button" name="Close" value="close" class="btn btn-danger mx-4"> Close </button>
+        <button id="stop" type="button" name="Stop" value="stop" class="btn btn-danger mx-4"> Stop </button>
     </div>
 
     {% block content %}{% endblock %}
 
     <div class="d-flex justify-content-center">
-    <div class="card mx-4">
-        <div class="card-header">
-        Gyro 
-        </div>
-        <div class="card-body" style="width: 500px">
-        <blockquote class="blockquote mb-0">
-            <p id="gyro-data"></p>
-        </blockquote>
-        </div>
+      <div class="card mx-4">
+          <div class="card-header">
+          Gyro 
+          </div>
+          <div class="card-body" style="width: 500px">
+          <blockquote class="blockquote mb-0">
+              <p id="gyro-data"></p>
+          </blockquote>
+          </div>
+      </div>
+
+      <div class="card mx-4">
+          <div class="card-header">
+          IR Sensor
+          </div>
+          <div class="card-body" style="width: 500px">
+          <blockquote class="blockquote mb-0">
+              <p id="ir-data">Open/Close</p>
+          </blockquote>
+          </div>
+      </div>
     </div>
 
-    <div class="card mx-4">
-        <div class="card-header">
-        IR Sensor
-        </div>
-        <div class="card-body" style="width: 500px">
-        <blockquote class="blockquote mb-0">
-            <p>Open/Close</p>
-        </blockquote>
-        </div>
+    <!-- http://jsfiddle.net/sylouuu/V7a3Y/15/ -->
+
+    <div class="text-white progress-label mt-4 fs-1">
+      Click Open to start open drone carrier
     </div>
 
-    </div>
-
-    <!-- <div style="text-align:center;" class="mt-5 mx-5">
-        <p style="color:white;font-size:larger;">Progress Bar</p>
-        <div class="progress">
-            <div class="progress-bar bg-secondary" role="progressbar" style="width: 25%;" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">25%</div>
-        </div>
-    </div> -->
-
-    <!-- https://www.tutorialspoint.com/jqueryui/jqueryui_progressbar.htm -->
-    <div class = "text-white progress-label mt-4 fs-1">
-        Click Open to start open drone carrier
-    </div>
-    <div id = "progressbar-5" class="mx-5 my-2">
-      <!-- <div class = "progress-label text-black">
-      Loading...
-      </div> -->
-    </div>
+    <div id="log" class="text-white progress-label mt-3 fs-2"></div>
+    <div id="bar" class="mx-5"></div>
 
     <script src="{{ url_for('static', filename='popper.min.js') }}" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
     <script src="{{ url_for('static', filename='bootstrap.min.js') }}" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
