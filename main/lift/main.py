@@ -87,12 +87,12 @@ def move_down(servo, LowerLimit, maxTime = -1, conn=None):
     return LowerLimit
 
 #def yeet(servo, degree, timer, conn=None):
-def yeet(servo, timer, conn=None):
+def yeet(servo, timer, dir, conn=None):
     # Move it to that degree
     print("Yeeting")
     #servo.moveTimeWrite( degree, time)
-    servo.motorMode(-1000) #TODO: Switch to working with degrees.
-    time.sleep(timer)
+    servo.motorMode(1000 * dir) #TODO: Switch to working with degrees.
+    time.sleep(timer / 1000)
     servo.motorMode(0)
     print("Yeet complete")
         

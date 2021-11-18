@@ -28,8 +28,12 @@ def lift(timeout="1000"):
 def lower(timeout="1000"):
     return move(move_down, timeout)
 
-def open_lid():
-    yeet(servo2, 1)
+def open_lid(durration=1000):
+    yeet(servo2, int(durration), -1)
+    return True
+
+def close_lid(durration=1000):
+    yeet(servo2, int(durration), 1)
     return True
 
 def close_box():
@@ -69,6 +73,7 @@ function_map = {
         "" : do_nothing,
         "lower" : lower,
         "get_gyro" : get_gyro,
+        "close": close_lid,
     }
 
 async def handle_connection(conn):

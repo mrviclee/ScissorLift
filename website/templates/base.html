@@ -21,6 +21,7 @@
         isOpen = true
         isLevel = false
         isLidOpen = false
+        move_cmd = "lower"
 
         var progressbar = $( "#progressbar-5" );
         var progressLabel = $( ".progress-label" );
@@ -39,11 +40,8 @@
             ir_socket.send(JSON.stringify(to_send))
         }
 
-        to_send = {
-            "cmd" : "get_gyro"
-        }
-        function open_proc(timeout=1000) {
-
+        function start_move(direction, timeout=1000) {
+            move_cmd = direction
             to_send = {
                 "cmd" : "lift",
                 "params" : ["0"],
@@ -57,10 +55,53 @@
             motor_socket.send(JSON.stringify(to_send));
         }
 
+        function open_proc(timeout=1000) {
+
+            if (isLevel) {
+                if (!isLidOpen) {
+                    to_send = {
+                        "cmd" : "open"
+                    }
+                    console.log("Sending open command.")
+                    motor_socket.send(JSON.stringify(to_send))
+                }
+            }
+            start_move("lift", timeout)
+
+        }
+
+        function close_lid(timeout) {
+            console.log("Close lid called");
+            if (isLidOpen) {
+                to_send = {
+                    "cmd" : "close",
+                    "params" : [timeout]
+                }
+                console.log("Sending open command.")
+                motor_socket.send(JSON.stringify(to_send))
+            }
+        }
+
+        function close_proc(timeout=500, total_time=5000) {
+            var i = 0;                  //  set your counter to 1
+
+            function myLoop() {         //  create a loop function
+              setTimeout(function() {   //  call a 3s setTimeout when the loop is called
+                close_lid(timeout);   //  your code here
+                i++;                    //  increment the counter
+                if (i < total_time/timeout) {           //  if the counter < 10, call the loop function
+                  myLoop();             //  ..  again which will trigger another 
+                }                       //  ..  setTimeout()
+              }, timeout)
+            }
+            
+            myLoop();  
+            }
+
         motor_socket.onmessage = function (event) {
             duration = 100
             to_send = {
-                "cmd" : "lower",
+                "cmd" : move_cmd,
                 "params" : [duration]
             }
             data = JSON.parse(event.data);
@@ -80,11 +121,6 @@
             }
         }
 
-        //var socket = io("ws://raspberrypi:5050");
-        // const socket = new WebSocket("ws://localhost:5050");
-        const gyro_socket = new WebSocket("ws://localhost:5050");
-        const ir_socket = new WebSocket("ws://localhost:5051");
-        // var g_val = 0
 
         var maxWidth = 1500;
         var duration = 10000;
@@ -143,7 +179,6 @@
 
             var $bar = $('#bar');
             $bar.stop();
-            console.log("here");
 
             clearInterval(timer);
 
