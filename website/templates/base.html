@@ -123,44 +123,52 @@
             }
         }
 
-
         var maxWidth = 1500;
-        var duration = 10000;
+        var duration = 100;
         var $log = $('#log');
         var $open = $('#open');
         var $stop = $('#stop');
         var timer;
+        var width = 0
+
+        function incBar(newWidth, maxWidth) {
+          var $bar = $('#bar');
+          Horloge(maxWidth);
+          if (newWidth <= maxWidth ) {
+            $bar.animate({
+                width: newWidth
+            }, duration, function() {
+                $(this).css('background-color', 'green');
+                $log.html('100 %');
+            });
+          }
+        } 
 
         $(function(){
             $('#open').on('click' , function(){
-                open_proc()
-              // send open command
-              $open.attr('disabled', true);
-              $stop.removeAttr("disabled");
+              open_proc()
+
+              width += 20;
+              incBar(width, maxWidth);
+              // $open.attr('disabled', true);
+              // $stop.removeAttr("disabled");
 
               $('#open').removeClass('btn-danger').addClass('btn-success');
               $('#close').removeClass('btn-success').addClass('btn-danger');
               $('#stop').removeClass('btn-success').addClass('btn-danger');
+              document.getElementById("open-title").style.display = "none";
 
-              var $bar = $('#bar');
-              Horloge(maxWidth);
-              timer = setInterval('Horloge('+maxWidth+')', 100);
-
-              $bar.animate({
-                  width: maxWidth
-              }, duration, function() {
-                  $(this).css('background-color', 'green');
-                  $log.html('100 %');
-                  clearInterval(timer);
-              });
             });
 
         $(function(){
-          // send close command
+
           $('#close').on('click' , function(){
 
             $open.removeAttr("disabled");
             $stop.removeAttr("disabled");
+
+            width -= 20;
+            incBar(width, maxWidth);
 
             $('#close').removeClass('btn-danger').addClass('btn-success');
             $('#stop').removeClass('btn-success').addClass('btn-danger');
@@ -196,7 +204,6 @@
             pitch = obj["return"]["pitch"]
             roll = obj["return"]["roll"]
             
-            //console.log(`pitch: ${pitch}, roll: ${roll}`);
             if (pitch != undefined && roll != undefined) {
                 $("#gyro-data").html(`${pitch} ${roll}`);
             }
@@ -248,7 +255,6 @@
         width:0px;
         height:25px;
         border:1px solid black;
-        background-color:yellow;
         border-radius:3px;
       }
     </style>
@@ -300,7 +306,7 @@
 
     <!-- http://jsfiddle.net/sylouuu/V7a3Y/15/ -->
 
-    <div class="text-white progress-label mt-4 fs-1">
+    <div id="open-title" class="text-white progress-label mt-4 fs-1">
       Click Open to start open drone carrier
     </div>
 
