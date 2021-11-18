@@ -4,32 +4,78 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
+    <link href="{{ url_for('static', filename='bootstrap.min.css') }}" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+    <script src="{{ url_for('static', filename='socket.io.js') }}" integrity="sha512-aMGMvNYu8Ue4G+fHa359jcPb1u+ytAF+P2SCb+PxrjCdO3n3ZTxJ30zuH39rimUggmTwmh2u7wvQsDTHESnmfQ==" crossorigin="anonymous"></script>
+    <script src="{{ url_for('static', filename='jquery-3.3.1.slim.min.js') }}" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+
     <script>
         //var socket = io("ws://raspberrypi:5050");
-        const socket = new WebSocket("ws://10.3.141.1:5050");
+        const socket = new WebSocket("ws://localhost:5050");
 
         socket.onmessage = function (event) {
             console.log(event.data);
           }
     </script>
 
-    <title>Document</title>
 </head>
+
+<nav class="navbar navbar-light bg-light">
+  <nav class="navbar navbar-light bg-light">
+    <p class="navbar-brand mx-3 my-0 pb-0 fs-2">DRONE VALET</p>
+  </nav>
+</nav>
+
 <body class="bg-primary text-center">
-    <h1 class="mt-5"> Drone Valet </h1>
-    
+    <div>
+        <img src="{{url_for('static', filename='drone-valet.png')}}" align="middle" class="mt-5"/>
+    </div>
+
     <div class="d-flex justify-content-center my-4">
-        <form method ="post" action="/open.html">
-             <button type="submit" name="Open" value="open" class="btn btn-secondary mx-4"> Open </button>
+        <button type="submit" name="Open" value="open" class="btn btn-secondary mx-4"> Open </button>
+        <button type="submit" name="Close" value="close" class="btn btn-secondary mx-4"> Close </button>
+        <!-- <form method ="post" action="/open.html">
         </form> 
         <form id="close" method ="post" action="/close.html">
-             <button type="submit" name="Close" value="close" class="btn btn-secondary mx-4"> Close </button>
-        </form> 
+        </form>  -->
     </div>
 
     {% block content %}{% endblock %}
 
-    <h1>Data1: <span id="data1">  </span></h1>
+    <div class="d-flex justify-content-center">
+    <div class="card mx-4">
+        <div class="card-header">
+        Gyro 
+        </div>
+        <div class="card-body" style="width: 500px">
+        <blockquote class="blockquote mb-0">
+            <p>Data</p>
+        </blockquote>
+        </div>
+    </div>
+
+    <div class="card mx-4">
+        <div class="card-header">
+        IR Sensor
+        </div>
+        <div class="card-body" style="width: 500px">
+        <blockquote class="blockquote mb-0">
+            <p>Open/Close</p>
+        </blockquote>
+        </div>
+    </div>
+
+    </div>
+
+    <div style="text-align:center;" class="mt-5 mx-5">
+    <p style="color:white;font-size:larger;">Progress Bar</p>
+    <div class="progress">
+        <div class="progress-bar bg-secondary" role="progressbar" style="width: 25%;" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">25%</div>
+    </div>
+
+    </div>
+
+    <script src="{{ url_for('static', filename='popper.min.js') }}" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="{{ url_for('static', filename='bootstrap.min.js') }}" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 
 </body>
 </html>
