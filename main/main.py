@@ -120,6 +120,9 @@ async def handle_connection(conn):
         await conn.send(to_send)
         print(f" --> {to_send}")
 
+async def handler():
+    await asyncio.wait([handle_connection(uri) for uri in connections])
+
 if __name__ == "__main__":
     port = int(sys.argv[1]) if len(sys.argv) >= 2 else 5050
 

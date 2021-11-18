@@ -12,13 +12,33 @@
     <script src = "https://code.jquery.com/jquery-1.10.2.js"></script>
     <script src = "https://code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
       
-
     <script>
-        const socket = new WebSocket("ws://raspberrypi:5050");
+        host = "raspberrypi";
+        port = "5050";
+        const motor_socket = new WebSocket(`ws:${host}:${port}`);
+        const gyro_socket = new WebSocket(`ws://${host}:${port}`);
+        const ir_socket = new WebSocket(`ws:${host}:${port}`);
         isOpen = false
         isLevel = false
         isLidOpen = false
 
+        gyro_socket.onopen = function (event) {
+            to_send = {
+                "cmd" : ""
+            }
+            gyro_socket.send(JSON.stringify(to_send));
+        }
+
+        ir_socket.onopen = function (event) {
+            to_send = {
+                "cmd" : ""
+            }
+            ir_socket.send(JSON.stringify(to_send))
+        }
+
+        to_send = {
+            "cmd" : "get_gyro"
+        }
         function open_proc(timeout=1000) {
 
             to_send = {
@@ -31,10 +51,10 @@
                     "status" : "go"
                 }
             }
-            socket.send(JSON.stringify(to_send));
+            motor_socket.send(JSON.stringify(to_send));
         }
 
-        socket.onmessage = function (event) {
+        motor_socket.onmessage = function (event) {
             duration = 100
             to_send = {
                 "cmd" : "lower",
@@ -53,12 +73,9 @@
                     "total_timeout" : total_timeout,
                     "status" : status
                 }
-                socket.send(JSON.stringify(to_send));
+                motor_socket.send(JSON.stringify(to_send));
             }
         }
-
-        const gyro_socket = new WebSocket("ws://localhost:5050");
-        const ir_socket = new WebSocket("ws://localhost:5051");
 
         $(function(){
             $('#open').on('click' , function(){
@@ -90,7 +107,7 @@
         $(function(){
             $('#close').on('click' , function(){
             //   socket.send(close)
-            console.log(progressbar.text)
+            // console.log(progressbar.text)
             });
         });
 
@@ -124,14 +141,39 @@
 
         gyro_socket.onmessage = function (event) {
             var obj = JSON.parse(event.data);
-            console.log(obj.return);
-            $("#gyro-data").html(obj.return);
+            pitch = obj["return"]["pitch"]
+            roll = obj["return"]["roll"]
+            
+            console.log(`pitch: ${pitch}, roll: ${roll}`);
+            if (pitch != undefined && roll != undefined) {
+                $("#gyro-data").html(`${pitch} ${roll}`);
+            }
+
+            if (Math.abs(pitch) > 15 && Math.abs(roll) > 15) {
+                isLevel = true;
+            } else {
+                isLevel = false;
+            }
+            to_send = {
+                "cmd" : "get_gyro"
+            }
+            gyro_socket.send(JSON.stringify(to_send));
         }
 
         ir_socket.onmessage = function (event) {
             var obj = JSON.parse(event.data);
-            console.log(obj.return);
-            $("#ir-data").html(obj.return);
+            console.log(`ir data: ${obj["return"]}`);
+            if (obj["return"]) {
+                isLevel = true;
+            } else {
+                isLevel = false;
+            }
+
+            $("#ir-data").html(`${obj["return"]}`);
+            to_send = {
+                "cmd" : "is_level"
+            }
+            ir_socket.send(JSON.stringify(to_send))
         }
 
     </script>
