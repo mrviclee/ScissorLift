@@ -15,8 +15,9 @@ if __debug__:
 def get_gyro():
     angleMeter = AngleMeterAlpha()
     angleMeter.measure()
-    time.sleep(2) #TODO: get rid of this
-
+    
+    time.sleep(.2)
+    
     roll = angleMeter.get_int_roll()
     pitch = angleMeter.get_int_pitch()
     return {
@@ -27,12 +28,7 @@ def get_gyro():
 def isLevel():
     if not __debug__:
         return True
-    angleMeter = AngleMeterAlpha()
-    angleMeter.measure()
-    time.sleep(2)
+    roll = get_gyro()["roll"]
+    pitch = get_gyro()["pitch"]
 
-    roll = abs(angleMeter.get_int_roll())
-    pitch = abs(angleMeter.get_int_pitch())
-
-    angleMeter.angleThread.join
     return roll < 15 and pitch < 15

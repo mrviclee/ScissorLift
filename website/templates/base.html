@@ -14,13 +14,16 @@
       
     <script>
         host = "raspberrypi";
-        port = "5050";
+        port = 5050;
         const motor_socket = new WebSocket(`ws:${host}:${port}`);
-        const gyro_socket = new WebSocket(`ws://${host}:${port}`);
-        const ir_socket = new WebSocket(`ws:${host}:${port}`);
-        isOpen = false
+        const gyro_socket = new WebSocket(`ws://${host}:${port + 1}`);
+        const ir_socket = new WebSocket(`ws:${host}:${port + 2}`);
+        isOpen = true
         isLevel = false
         isLidOpen = false
+
+        var progressbar = $( "#progressbar-5" );
+        var progressLabel = $( ".progress-label" );
 
         gyro_socket.onopen = function (event) {
             to_send = {
@@ -65,8 +68,8 @@
             timeout = data["message"]["timeout"];
             total_timeout = data["message"]["total_timeout"];
             status = data["message"]["status"];
-            console.log(`data: ${data}, count: ${count}, timeout: ${timeout}, status: ${status}`);
-            if ((data["return"] == "timeout") && (timeout > 0) && isOpen) {
+            console.log(`return: ${data["return"]}, count: ${count}, timeout: ${timeout}, status: ${status}, isLevel: ${isLevel}, isOpen: ${isOpen} isLidOpen: ${isLidOpen}`);
+            if ((data["return"] == "timeout") && (timeout > 0) && isOpen && isLevel && isLidOpen) {
                 to_send["message"] = {
                     "count" : count + 1,
                     "timeout" : timeout - duration,
@@ -80,9 +83,7 @@
         $(function(){
             $('#open').on('click' , function(){
             //   socket.send(open)
-              var progressbar = $( "#progressbar-5" );
-              var progressLabel = $( ".progress-label" );
-
+                open_proc()
               $( "#progressbar-5" ).progressbar({
                 value: 0,
                 change: function() {
@@ -144,12 +145,12 @@
             pitch = obj["return"]["pitch"]
             roll = obj["return"]["roll"]
             
-            console.log(`pitch: ${pitch}, roll: ${roll}`);
+            //console.log(`pitch: ${pitch}, roll: ${roll}`);
             if (pitch != undefined && roll != undefined) {
                 $("#gyro-data").html(`${pitch} ${roll}`);
             }
 
-            if (Math.abs(pitch) > 15 && Math.abs(roll) > 15) {
+            if (Math.abs(pitch) < 15 && Math.abs(roll) < 15) {
                 isLevel = true;
             } else {
                 isLevel = false;
@@ -162,16 +163,16 @@
 
         ir_socket.onmessage = function (event) {
             var obj = JSON.parse(event.data);
-            console.log(`ir data: ${obj["return"]}`);
+            //console.log(`ir data: ${obj["return"]}`);
             if (obj["return"]) {
-                isLevel = true;
+                isLidOpen = true;
             } else {
-                isLevel = false;
+                isLidOpen = false;
             }
 
             $("#ir-data").html(`${obj["return"]}`);
             to_send = {
-                "cmd" : "is_level"
+                "cmd" : "is_open"
             }
             ir_socket.send(JSON.stringify(to_send))
         }

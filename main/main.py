@@ -1,3 +1,5 @@
+from asyncio.tasks import ensure_future
+from types import coroutine
 from lift.main import cleanup, move_up, move_down, yeet, cleanup, checkIR
 from lift.main import servo1
 from lift.main import servo2
@@ -8,6 +10,7 @@ from time import sleep
 import asyncio
 import websockets
 import json
+import threading
 
 def move(func, timeout):
     timeout = int(timeout)
@@ -65,11 +68,12 @@ function_map = {
         "open" : open_lid,
         "" : do_nothing,
         "lower" : lower,
-        "get_gyro" : get_gyro
+        "get_gyro" : get_gyro,
     }
 
 async def handle_connection(conn):
-     while(True):
+    print("Handle connection is running...")
+    while(True):
         try:
             msg = await conn.recv()
         except websockets.exceptions.ConnectionClosedError:
@@ -120,14 +124,30 @@ async def handle_connection(conn):
         await conn.send(to_send)
         print(f" --> {to_send}")
 
-async def handler():
-    await asyncio.wait([handle_connection(uri) for uri in connections])
+def between_callback(conn):
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+
+    loop.run_until_complete(handle_connection(conn))
+    loop.close()
+
+async def handler(conn, path):
+    # t = threading.Thread(target=between_callback, args=(conn, ))
+    t = threading.Thread(target=asyncio.run, args=(handle_connection(conn),))
+    t.start()
+    t.join()
+    # await asyncio.wait([handle_connection(uri) for uri in connections])
 
 if __name__ == "__main__":
     port = int(sys.argv[1]) if len(sys.argv) >= 2 else 5050
 
     print(f"Listing on port {port}.")
+    # start_server = websockets.serve(handler, '0.0.0.0', port)
     start_server = websockets.serve(handle_connection, '0.0.0.0', port)
+    # start_server1 = websockets.serve(handle_connection, '0.0.0.0', port + 1)
+    # start_server2 = websockets.serve(handle_connection, '0.0.0.0', port + 2)
 
     asyncio.get_event_loop().run_until_complete(start_server)
+    # asyncio.get_event_loop().run_until_complete(start_server1)
+    # asyncio.get_event_loop().run_until_complete(start_server2)
     asyncio.get_event_loop().run_forever()
