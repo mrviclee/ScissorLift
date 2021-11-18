@@ -9,12 +9,49 @@
     <script src="{{ url_for('static', filename='jquery-3.3.1.slim.min.js') }}" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
 
     <script>
-        //var socket = io("ws://raspberrypi:5050");
-        const socket = new WebSocket("ws://localhost:5050");
+        const socket = new WebSocket("ws://raspberrypi:5050");
+        isOpen = false
+        isLevel = false
+        isLidOpen = false
+
+        function open_proc(timeout=1000) {
+
+            to_send = {
+                "cmd" : "lift",
+                "params" : ["0"],
+                "message" : {
+                    "count" : 0,
+                    "timeout" : timeout,
+                    "total_timeout" : timeout,
+                    "status" : "go"
+                }
+            }
+            socket.send(JSON.stringify(to_send));
+        }
 
         socket.onmessage = function (event) {
-            console.log(event.data);
-          }
+            duration = 100
+            to_send = {
+                "cmd" : "lower",
+                "params" : [duration]
+            }
+            data = JSON.parse(event.data);
+            count = data["message"]["count"];
+            timeout = data["message"]["timeout"];
+            total_timeout = data["message"]["total_timeout"];
+            status = data["message"]["status"];
+            console.log(`data: ${data}, count: ${count}, timeout: ${timeout}, status: ${status}`);
+            if ((data["return"] == "timeout") && (timeout > 0) && isOpen) {
+                to_send["message"] = {
+                    "count" : count + 1,
+                    "timeout" : timeout - duration,
+                    "total_timeout" : total_timeout,
+                    "status" : status
+                }
+                socket.send(JSON.stringify(to_send));
+            }
+        }
+
     </script>
 
 </head>
