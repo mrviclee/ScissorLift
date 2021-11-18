@@ -9,6 +9,7 @@ from time import sleep
 import asyncio
 import websockets
 import functools
+import json
 
 def move(func, timeout):
     timeout = int(timeout)
@@ -74,33 +75,45 @@ async def handle_connection(conn):
             msg = await conn.recv()
         except websockets.exceptions.ConnectionClosedError:
             break
+
         msg = msg.strip()
         print(f" <-- {msg}")
-        params = []
-        if len(msg.split(":")) > 1:
-            params = msg.split(":")[1].split(",")
-            msg = msg.split(":")[0]
-        if (msg in function_map):
+
+        try:
+            data = json.loads(msg) #TODO: accept invalid json
+        except json.decoder.JSONDecodeError:
+            data = {
+                "cmd" : msg
+            }
+        cmd = data.get("cmd")
+        reply = ""
+        type = ""
+        if (cmd in function_map):
             try:
-                reply = function_map[msg](*params)
+                if data.get("params"):
+                    reply = function_map[msg](*data.get("params"))
+                else:
+                    reply = function_map[msg]()
+                type = "success"
             except Exception as e:
                 print("ERROR:", e)
                 print("Cleaning up motors")
                 cleanup()
-                reply = "function_error"
-
-            if reply is None:
-                reply = "msg:no_reply"
-            elif reply == "":
-                continue
-            else:
-                reply = f"msg:{reply}"
+                reply = str(e)
+                type = "error"
         else:
             print("WARNING: invalid command:", msg)
-            continue
+            reply = f"invalid command: {cmd}"
+            type = "invalid"
 
-        await conn.send(reply)
-        print(f" --> {reply}")
+        response = {
+            "type" : type,
+            "return" : reply
+        }
+
+        to_send = json.dumps(response)
+        await conn.send(to_send)
+        print(f" --> {to_send}")
 
 if __name__ == "__main__":
     port = int(sys.argv[1]) if len(sys.argv) >= 2 else 5050
