@@ -80,34 +80,40 @@ async def handle_connection(conn):
 
         try:
             data = json.loads(msg)
-        except json.decoder.JSONDecodeError:
+        except json.decoder.JSONDecodeError as e:
+            print("ERROR: ", e)
             data = {
                 "cmd" : msg
             }
+        if type(data) == str:
+            continue
         cmd = data.get("cmd")
         reply = ""
-        type = ""
+        data_type = ""
         if (cmd in function_map):
             try:
                 if data.get("params"):
-                    reply = function_map[msg](*data.get("params"))
+                    reply = function_map[cmd](*data.get("params"))
                 else:
-                    reply = function_map[msg]()
-                type = "success"
+                    reply = function_map[cmd]()
+                data_type = "success"
             except Exception as e:
                 print("ERROR:", e)
                 print("Cleaning up motors")
                 cleanup()
                 reply = str(e)
-                type = "error"
+                data_type = "error"
         else:
             print("WARNING: invalid command:", msg)
             reply = f"invalid command: {cmd}"
-            type = "invalid"
+            data_type = "invalid"
+
+        msg = data.get("message")
 
         response = {
-            "type" : type,
-            "return" : reply
+            "type" : data_type,
+            "return" : reply,
+            "message" : msg
         }
 
         to_send = json.dumps(response)
