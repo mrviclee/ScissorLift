@@ -46,7 +46,6 @@
                 "cmd" : "lift",
                 "params" : ["0"],
                 "message" : {
-                    "count" : 0,
                     "timeout" : timeout,
                     "total_timeout" : timeout,
                     "status" : "go"
@@ -82,7 +81,7 @@
             }
         }
 
-        function close_proc(timeout=500, total_time=5000) {
+        function close_proc(lift_timeout=1000, timeout=500, total_time=5000) {
             var i = 0;                  //  set your counter to 1
 
             function myLoop() {         //  create a loop function
@@ -96,6 +95,9 @@
             }
             
             myLoop();  
+
+            console.log("Lowering...")
+            start_move("lower", lift_timeout)
             }
 
         motor_socket.onmessage = function (event) {
@@ -105,19 +107,19 @@
                 "params" : [duration]
             }
             data = JSON.parse(event.data);
-            count = data["message"]["count"];
-            timeout = data["message"]["timeout"];
-            total_timeout = data["message"]["total_timeout"];
-            status = data["message"]["status"];
-            console.log(`return: ${data["return"]}, count: ${count}, timeout: ${timeout}, status: ${status}, isLevel: ${isLevel}, isOpen: ${isOpen} isLidOpen: ${isLidOpen}`);
-            if ((data["return"] == "timeout") && (timeout > 0) && isOpen && isLevel && isLidOpen) {
-                to_send["message"] = {
-                    "count" : count + 1,
-                    "timeout" : timeout - duration,
-                    "total_timeout" : total_timeout,
-                    "status" : status
+            if (data["message"] != null && "timeout" in data["message"]) {
+                timeout = data["message"]["timeout"];
+                total_timeout = data["message"]["total_timeout"];
+                status = data["message"]["status"];
+                console.log(`return: ${data["return"]}, timeout: ${timeout}, status: ${status}, isLevel: ${isLevel}, isOpen: ${isOpen} isLidOpen: ${isLidOpen}`);
+                if ((data["return"] == "timeout") && (timeout > 0) && isOpen && isLevel && isLidOpen) {
+                    to_send["message"] = {
+                        "timeout" : timeout - duration,
+                        "total_timeout" : total_timeout,
+                        "status" : status
+                    }
+                    motor_socket.send(JSON.stringify(to_send));
                 }
-                motor_socket.send(JSON.stringify(to_send));
             }
         }
 
