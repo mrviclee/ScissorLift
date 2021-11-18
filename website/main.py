@@ -37,7 +37,7 @@ error_map = {
 
 @app.route("/", methods=["GET", "POST"])
 def home():
-    return render_template("home.html", result = {'phy':50,'che':60,'maths':70})
+    return render_template("home.html")
 
 def move_lid(instruction):
     ret = subprocess.call(f"./client {instruction}", shell=True)
@@ -45,16 +45,6 @@ def move_lid(instruction):
         if ret not in error_map:
             ret = 255
         error_map[ret]()
-
-@app.route("/open.html", methods=["GET", "POST"])
-def open():
-    move_lid("open")
-    return render_template("home.html")
-
-@app.route("/close.html", methods=["GET", "POST"])
-def close():
-    move_lid("close")
-    return render_template("home.html", result = {'phy':50,'che':60,'maths':70})
 
 # @socketio.on('connect')
 # def ws_connect():

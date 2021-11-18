@@ -30,13 +30,6 @@ def cleanup():
     servo1.motorMode(0)
     servo2.motorMode(0)
 
-def shutdown(sig, frame):
-    cleanup()
-    print("quiting")
-    exit(1)
-
-signal.signal(signal.SIGINT, shutdown)
-
 def checkIR():
     return GPIO.input(26) == 1 # 1 Means no block, 0 means block
 

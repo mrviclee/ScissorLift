@@ -3,7 +3,9 @@ from types import coroutine
 from lift.main import cleanup, move_up, move_down, yeet, cleanup, checkIR
 from lift.main import servo1
 from lift.main import servo2
-from gyro.AngleOMeter import get_gyro, isLevel
+# from gyro.AngleOMeter import get_gyro, isLevel
+from gyro.getGyroTest import get_gyro, isLevel
+from gyro.gyroMonitor import kill_thread
 import time
 import sys
 from time import sleep
@@ -11,6 +13,17 @@ import asyncio
 import websockets
 import json
 import threading
+import signal
+import os
+
+def shutdown(sig, frame):
+    cleanup()
+    kill_thread = True
+    print("quiting")
+    os.kill(os.getpid(), signal.SIGUSR1)
+    exit(1)
+
+signal.signal(signal.SIGINT, shutdown)
 
 def move(func, timeout):
     timeout = int(timeout)
@@ -42,6 +55,7 @@ def close_box():
     move_down(servo1, 'No')
 
 def is_open():
+    sleep(.2)
     return checkIR()
 
 def is_go(conn=None):
