@@ -1,14 +1,12 @@
 from lift.main import cleanup, move_up, move_down, yeet, cleanup, checkIR
 from lift.main import servo1
 from lift.main import servo2
-from gyro.AngleOMeter import isLevel
+from gyro.AngleOMeter import get_gyro, isLevel
 import time
-import socket
 import sys
 from time import sleep
 import asyncio
 import websockets
-import functools
 import json
 
 def move(func, timeout):
@@ -66,7 +64,8 @@ function_map = {
         "is_open" : is_open,
         "open" : open_lid,
         "" : do_nothing,
-        "lower" : lower
+        "lower" : lower,
+        "get_gyro" : get_gyro
     }
 
 async def handle_connection(conn):
@@ -80,7 +79,7 @@ async def handle_connection(conn):
         print(f" <-- {msg}")
 
         try:
-            data = json.loads(msg) #TODO: accept invalid json
+            data = json.loads(msg)
         except json.decoder.JSONDecodeError:
             data = {
                 "cmd" : msg

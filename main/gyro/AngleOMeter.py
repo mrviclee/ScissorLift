@@ -11,6 +11,19 @@ if __debug__:
     from .AngleMeterAlpha import AngleMeterAlpha
 
 # TODO: reduce time to measure GYRO
+
+def get_gyro():
+    angleMeter = AngleMeterAlpha()
+    angleMeter.measure()
+    time.sleep(2) #TODO: get rid of this
+
+    roll = angleMeter.get_int_roll()
+    pitch = angleMeter.get_int_pitch()
+    return {
+        "roll" : roll,
+        "pitch" : pitch
+    }
+
 def isLevel():
     if not __debug__:
         return True
