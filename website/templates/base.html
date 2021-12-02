@@ -13,7 +13,8 @@
     <script src = "{{ url_for('static', filename='jquery-ui.js') }}"></script>  
 
     <script>
-        host = "raspberrypi";
+        //host = "raspberrypi";
+        host = "10.3.141.1";
         port = 5050;
         const motor_socket = new WebSocket(`ws:${host}:${port}`);
         const gyro_socket = new WebSocket(`ws://${host}:${port + 1}`);
@@ -156,11 +157,11 @@
                     } else if (move_cmd == "lift") {
                         select_button("open");
                     }
-                } else if (data["return"] == true && move_cmd == "lower") {
+                } else if (data["return"] == true && move_cmd == "lower") { //TODO: Change state to stopped.  Set progrss bar to 0
                     total_ms_ran = 0;
                     select_button("stop");
                     
-                } else if (data["return"] == true && move_cmd == "lift") {
+                } else if (data["return"] == true && move_cmd == "lift") { //TODO: Disable progress bar.  Ready to launch mode. Set progress bar to 100
                     console.log(data["return"]+" "+move_cmd)
                     select_button("stop");
                     total_ms_ran = total_ms;
@@ -262,7 +263,7 @@
             var obj = JSON.parse(event.data);
             pitch = obj["return"]["pitch"] || 0
             pitch = pitch.toFixed(3)
-            roll = obj["return"]["roll"] || 0
+            roll = obj["return"]["roll"] || 0 //TODO: Change colors of and add threshold to pitch and roll
             roll = roll.toFixed(3)
             
             if (pitch != undefined && roll != undefined) {

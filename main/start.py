@@ -12,8 +12,11 @@ def signal_handler(sig, frame):
 if __name__ == "__main__":
     start_port = 5050
     childs = []
+    mode = "-O" if not __debug__ else ""
     for i in range(3):
-        childs.append(subprocess.Popen(f"python main.py {start_port + i}", shell=True))
+        cmd = f"python {mode} main.py {start_port + i}" 
+        #print(f"cmd: {cmd}")
+        childs.append(subprocess.Popen(cmd, shell=True))
         sleep(1)
     
     for p in childs:
