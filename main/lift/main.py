@@ -6,6 +6,7 @@ else:
 import signal
 import socket
 import sys
+import threading
 import time
 from datetime import datetime
 
@@ -56,6 +57,7 @@ def wait_check_socket(conn):
         servo1.motorMode(currentMode)
     else:
         servo1.motorMode(currentMode[1])
+
 
 def move_up(servo, UpperLimit, maxTime = -1, conn=None):
     start = datetime.now()

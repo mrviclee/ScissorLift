@@ -55,7 +55,7 @@ def close_box():
     move_down(servo1, 'No')
 
 def is_open():
-    sleep(.2)
+    sleep(.5)
     return checkIR()
 
 def is_go(conn=None):

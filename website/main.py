@@ -1,3 +1,17 @@
+
+"""
+put max pitch and roll - green is good red it not good orange is not good
+
+
+
+Better state displaying (opening, closing, ready to launch, error, stopped)
+
+Do dumb user testing
+Test on phone
+Fix progress bar.  Progress bar should go up
+
+"""
+
 from threading import Lock
 from flask import Flask, render_template, request, flash
 # from flask_socketio import SocketIO, emit
@@ -59,5 +73,5 @@ def move_lid(instruction):
 #     print("Recv:")
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host="0.0.0.0")
     # socketio.run(app)

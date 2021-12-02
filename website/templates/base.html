@@ -107,26 +107,27 @@
         }
 
         function close_proc(lift_timeout=1000, timeout=500, total_time=5000) {
-            var i = 0;                  //  set your counter to 1
-
-            function myLoop() {         //  create a loop function
-              setTimeout(function() {   //  call a 3s setTimeout when the loop is called
-                close_lid(timeout);   //  your code here
-                i++;                    //  increment the counter
-                if (i < total_time/timeout) {           //  if the counter < 10, call the loop function
-                  myLoop();             //  ..  again which will trigger another 
-                }                       //  ..  setTimeout()
-              }, timeout)
-            }
-            
-            myLoop();  
-            
-            console.log("Lowering...")
+			console.log("Lowering...")
             start_move("lower", lift_timeout)
+
+			//var i = 0;                  //  set your counter to 1
+
+            //function myLoop() {         //  create a loop function
+            //  setTimeout(function() {   //  call a 3s setTimeout when the loop is called
+            //    close_lid(timeout);   //  your code here
+            //    i++;                    //  increment the counter
+            //    if (i < total_time/timeout) {           //  if the counter < 10, call the loop function
+            //      myLoop();             //  ..  again which will trigger another 
+            //    }                       //  ..  setTimeout()
+            //  }, timeout)
+            //}
+            
+            //myLoop();  
+            
             }
 
         motor_socket.onmessage = function (event) {
-            duration = 100
+            duration = 1000
             to_send = {
                 "cmd" : move_cmd,
                 "params" : [duration]
@@ -344,23 +345,23 @@
 
     {% block content %}{% endblock %}
 
-    <div class="d-flex justify-content-center">
-      <div class="card mx-4">
+    <div class="mx-auto col-sm-8 col-md-4 col-lg-4 col-xl-4">
+      <div class="card mb-4">
           <div class="card-header">
           Gyro 
           </div>
-          <div class="card-body" style="width: 500px">
+          <div class="card-body">
           <blockquote class="blockquote mb-0">
               <p id="gyro-data"></p>
           </blockquote>
           </div>
       </div>
 
-      <div class="card mx-4">
+      <div class="card">
           <div class="card-header">
           IR Sensor
           </div>
-          <div class="card-body" style="width: 500px">
+          <div class="card-body">
           <blockquote class="blockquote mb-0">
               <p id="ir-data">Open/Close</p>
           </blockquote>
