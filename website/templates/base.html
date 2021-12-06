@@ -142,7 +142,6 @@
                 console.log(`return: ${data["return"]}, timeout: ${timeout}, status: ${status}, isLevel: ${isLevel}, isOpen: ${isOpen} isLidOpen: ${isLidOpen}, totalMsRan: ${total_ms_ran * inc_value}`);
                 if ((data["return"] == "timeout") && (timeout > 0) && isOpen && isLevel && (isLidOpen || move_cmd == "lower")) {
                     // incBar(total_ms_ran * inc_value, 1500)
-                    $('.attendance-cage-css').css('height', $('.attendance-cage-css').height() + total_ms_ran * inc_value);
                     to_send["message"] = {
                         "timeout" : timeout - duration,
                         "total_timeout" : total_timeout,
@@ -156,8 +155,10 @@
                     }
                     if (move_cmd == "lower") {
                         select_button("close");
+                        $('.attendance-cage-css').css('height', $('.attendance-cage-css').height() - (total_ms_ran * inc_value));
                     } else if (move_cmd == "lift") {
                         select_button("open");
+                        $('.attendance-cage-css').css('height', $('.attendance-cage-css').height() + (total_ms_ran * inc_value));
                     }
                 } else if (data["return"] == true && move_cmd == "lower") { //TODO: Change state to stopped.  Set progrss bar to 0
                     total_ms_ran = 0;
@@ -168,11 +169,11 @@
                     select_button("stop");
                     total_ms_ran = total_ms;
                     $("#ready").removeAttr("style")
+                    // $('.attendance-cage-css').css('height', $('.attendance-cage-css').height()+400);
                 }
             }
         }
-        var maxHeight = 
-
+        var maxHeight = Screen.height;
         var maxWidth = 1500;
         // var duration = total_ms_ran;
         var $log = $('#log');
@@ -231,8 +232,8 @@
             $open.removeAttr("disabled");
             $stop.removeAttr("disabled");
 
-            width -= 20;
-            incBar(width, maxWidth);
+            // width -= 20;
+            // incBar(width, maxWidth);
 
             select_button("close");
             $("#ready").removeAttr("style").hide();
@@ -335,6 +336,7 @@
         position: absolute;
         bottom: 20px;
         z-index: 1;
+        max-height: 80%;
         }
 
         .bar-2 {
@@ -418,7 +420,6 @@
     <!-- <div id="log" class="text-white progress-label mt-3 fs-2"></div>
     <div id="bar" class="mx-5"></div> -->
     <div class="attendance-cage-css"></div>
-    <div id="changeatt" style="top:50px; left: 100px; position: absolute">Click me</div>
 
     <script src="{{ url_for('static', filename='popper.min.js') }}" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
     <script src="{{ url_for('static', filename='bootstrap.min.js') }}" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
