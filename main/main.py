@@ -24,7 +24,7 @@ def shutdown(sig, frame):
 signal.signal(signal.SIGINT, shutdown)
 g_moveTime = 0
 if not __debug__:
-    g_maxTime = 3000 
+    g_maxTime = 150000
 else:
     g_maxTime = 150000
 

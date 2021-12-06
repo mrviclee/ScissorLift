@@ -28,10 +28,12 @@
         move_cmd = "lower"
         total_ms_ran = 0
             //total_ms = 1 * 60 * 1000 + 43 * 1000
-        total_ms = 3000
+        total_ms = 150000
         current_height = 0
 
         function set_bar_height(height_ms) {
+            // screen_height = $(window).height() * .8 ;
+            // total_height_pixels = screen_height
             total_height_pixels = (screen.height * .8)
             total_height_ms = total_ms
             height = (height_ms / total_height_ms) * total_height_pixels
@@ -49,9 +51,17 @@
             $('.attendance-cage-css').css('height', height);
         }
 
+        function Horloge(maxHeight) { 
+            var h = $('.attendance-cage-css').height();
+            var percent = parseInt((h * 100) / maxHeight);
+            $('#log').html(percent + ' %');
+        }
+
         function inc_bar(dir) {
             console.log(`Bar current height ${$('.attendance-cage-css').height()}`)
             $('.attendance-cage-css').css('height', $('.attendance-cage-css').height() + 1 * dir);
+            maxHeight = screen.height * .8;
+            Horloge(maxHeight);
         }
 
         function set_warning() {
@@ -211,7 +221,7 @@
                     select_button("stop");
                     total_ms_ran = total_ms;
                     $("#ready").removeAttr("style")
-                        // $('.attendance-cage-css').css('height', $('.attendance-cage-css').height()+400);
+                    $('#log').html('100 %');
                 }
             }
         }
@@ -260,7 +270,6 @@
                 // incBar(width, maxWidth);
                 // $open.attr('disabled', true);
                 // $stop.removeAttr("disabled");
-
 
                 document.getElementById("open-title").style.display = "none";
                 select_button("open");
@@ -349,10 +358,6 @@
             ir_socket.send(JSON.stringify(to_send))
         }
 
-        // function Horloge(maxWidth) { var w = $('#bar').width();
-        //     var percent = parseInt((w * 100) / maxWidth);
-        //     $('#log').html(percent + ' %');
-        // }
     </script>
 
 
@@ -375,11 +380,12 @@
             width: 10%;
             float: left;
             background-color: #6ae719;
-            height: 5px;
+            height: 0px;
             position: absolute;
             bottom: 20px;
             z-index: 1;
             max-height: 100%;
+            margin-left: 10px;
         }
         
         .bar-2 {
@@ -402,6 +408,16 @@
             -o-user-select: none;
             cursor: pointer;
         }
+        @media (max-width: 767px) {
+        #logo {
+          display: none;
+        }
+        #cards-data {
+            margin-left: 75px;
+            margin-right: 75px;
+        }
+
+      }
     </style>
 
 </head>
@@ -414,7 +430,11 @@
 
 <body class="bg-primary text-center">
     <div>
-        <img src="{{url_for('static', filename='drone-valet.png')}}" align="middle" class="mt-5" />
+        <img id="logo" src="{{url_for('static', filename='drone-valet.png')}}" align="middle" class="mt-5" />
+    </div>
+
+    <div id="open-title" class="text-white progress-label mt-4 fs-1">
+        Click Open to start open drone carrier
     </div>
 
     <div class="d-flex justify-content-center my-4">
@@ -425,7 +445,7 @@
 
     {% block content %}{% endblock %}
 
-    <div class="mx-auto col-sm-8 col-md-4 col-lg-4 col-xl-4">
+    <div id="cards-data" class="mx-sm-5 mx-md-auto mx-lg-auto col-sm-8 col-md-4 col-lg-4 col-xl-4">
         <div class="card mb-4">
             <div class="card-header">
                 Gyro
@@ -457,12 +477,9 @@
 
     <!-- http://jsfiddle.net/sylouuu/V7a3Y/15/ -->
 
-    <div id="open-title" class="text-white progress-label mt-4 fs-1">
-        Click Open to start open drone carrier
-    </div>
 
-    <!-- <div id="log" class="text-white progress-label mt-3 fs-2"></div>
-    <div id="bar" class="mx-5"></div> -->
+    <div id="log" class="text-white progress-label mt-3 fs-2">0%</div>
+    <!-- <div id="bar" class="mx-5"></div> -->
     <div class="attendance-cage-css"></div>
 
     <script src="{{ url_for('static', filename='popper.min.js') }}" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
