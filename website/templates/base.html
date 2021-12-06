@@ -27,12 +27,15 @@
         isLidOpen = false
         move_cmd = "lower"
         total_ms_ran = 0
-        total_ms = 1 * 60 * 1000 + 43 * 1000
-        inc_value = (1 / total_ms) * 1500
+            //total_ms = 1 * 60 * 1000 + 43 * 1000
+        total_ms = 3000
         current_height = 0
 
         function set_bar_height(height_ms) {
-            height = height_ms * .5
+            total_height_pixels = (screen.height * .8)
+            total_height_ms = total_ms
+            height = (height_ms / total_height_ms) * total_height_pixels
+            console.log(`Setting bar height to ${height}`)
             $('.attendance-cage-css').css('height', height);
         }
 
@@ -148,7 +151,7 @@
             data = JSON.parse(event.data)
             current_height = data["return"]
             if (current_height == -1) { //Server gives -1 when at top
-                current_height = maxHeight
+                current_height = total_ms
             }
             set_bar_height(current_height)
             motor_height_socket.send(JSON.stringify(to_send))
@@ -166,9 +169,8 @@
                 timeout = data["message"]["timeout"];
                 total_timeout = data["message"]["total_timeout"];
                 status = data["message"]["status"];
-                console.log(`return: ${data["return"]}, timeout: ${timeout}, status: ${status}, isLevel: ${isLevel}, isOpen: ${isOpen} isLidOpen: ${isLidOpen}, totalMsRan: ${total_ms_ran * inc_value}`);
+                console.log(`return: ${data["return"]}, timeout: ${timeout}, status: ${status}, isLevel: ${isLevel}, isOpen: ${isOpen} isLidOpen: ${isLidOpen}`);
                 if ((data["return"] == "timeout") && (timeout > 0) && isOpen && isLevel && (isLidOpen || move_cmd == "lower")) {
-                    // incBar(total_ms_ran * inc_value, 1500)
                     to_send["message"] = {
                         "timeout": timeout - duration,
                         "total_timeout": total_timeout,
@@ -198,7 +200,6 @@
                 }
             }
         }
-        var maxHeight = Screen.height;
         var maxWidth = 1500;
         // var duration = total_ms_ran;
         var $log = $('#log');
