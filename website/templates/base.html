@@ -14,7 +14,8 @@
 
     <script>
         //host = "raspberrypi";
-        host = "10.3.141.1";
+        // host = "10.3.141.1";
+        host = "localhost";
         port = 5050;
         const motor_socket = new WebSocket(`ws:${host}:${port}`);
         const gyro_socket = new WebSocket(`ws://${host}:${port + 1}`);
@@ -140,7 +141,8 @@
                 status = data["message"]["status"];
                 console.log(`return: ${data["return"]}, timeout: ${timeout}, status: ${status}, isLevel: ${isLevel}, isOpen: ${isOpen} isLidOpen: ${isLidOpen}, totalMsRan: ${total_ms_ran * inc_value}`);
                 if ((data["return"] == "timeout") && (timeout > 0) && isOpen && isLevel && (isLidOpen || move_cmd == "lower")) {
-                    incBar(total_ms_ran * inc_value, 1500)
+                    // incBar(total_ms_ran * inc_value, 1500)
+                    $('.attendance-cage-css').css('height', $('.attendance-cage-css').height() + total_ms_ran * inc_value);
                     to_send["message"] = {
                         "timeout" : timeout - duration,
                         "total_timeout" : total_timeout,
@@ -169,27 +171,28 @@
                 }
             }
         }
+        var maxHeight = 
 
         var maxWidth = 1500;
-        var duration = total_ms_ran;
+        // var duration = total_ms_ran;
         var $log = $('#log');
         var $open = $('#open');
         var $stop = $('#stop');
         var timer;
         var width = 0
 
-        function incBar(newWidth, maxWidth) {
-          var $bar = $('#bar');
-          Horloge(maxWidth);
-          if (newWidth <= maxWidth ) {
-            $bar.animate({
-                width: newWidth
-            }, duration, function() {
-                $(this).css('background-color', 'green');
-                $log.html('100 %');
-            });
-          }
-        } 
+        // function incBar(newWidth, maxWidth) {
+        //   var $bar = $('#bar');
+        //   Horloge(maxWidth);
+        //   if (newWidth <= maxWidth ) {
+        //     $bar.animate({
+        //         width: newWidth
+        //     }, duration, function() {
+        //         $(this).css('background-color', 'green');
+        //         $log.html('100 %');
+        //     });
+        //   }
+        // } 
 
         function select_button(button) {
             if (button == "open") {
@@ -209,10 +212,10 @@
 
         $(function(){
             $('#open').on('click' , function(){
-              open_proc(total_ms + 30 * 1000)
+                open_proc(total_ms + 30 * 1000)
+                width += 20;
 
-              width += 20;
-              incBar(width, maxWidth);
+              // incBar(width, maxWidth);
               // $open.attr('disabled', true);
               // $stop.removeAttr("disabled");
 
@@ -236,6 +239,7 @@
           });
         });
 
+
         $(function(){
           $('#stop').on('click' , function(){
             // send stop command
@@ -247,14 +251,14 @@
 
             select_button("stop");
 
-            var $bar = $('#bar');
-            $bar.stop();
+            // var $bar = $('#bar');
+            // $bar.stop();
 
-            clearInterval(timer);
+            // clearInterval(timer);
 
-            var w = $bar.width();
-            var percent = parseInt((w * 100) / maxWidth);
-            $log.html(percent + ' %');
+            // var w = $bar.width();
+            // var percent = parseInt((w * 100) / maxWidth);
+            // $log.html(percent + ' %');
           });
         });
       });
@@ -301,16 +305,16 @@
             ir_socket.send(JSON.stringify(to_send))
         }
 
-        function Horloge(maxWidth) { var w = $('#bar').width();
-            var percent = parseInt((w * 100) / maxWidth);
-            $('#log').html(percent + ' %');
-        }
+        // function Horloge(maxWidth) { var w = $('#bar').width();
+        //     var percent = parseInt((w * 100) / maxWidth);
+        //     $('#log').html(percent + ' %');
+        // }
 
     </script>
 
 
     <style>
-      .progress-label {
+      /* .progress-label {
         position: inherit;
         left: 0%;
         top: 13px;
@@ -322,7 +326,36 @@
         height:25px;
         border:1px solid black;
         border-radius:3px;
-      }
+      } */
+      .attendance-cage-css{
+	    width:10%;
+        float:left;
+        background-color:#6ae719;
+        height:5px;
+        position: absolute;
+        bottom: 20px;
+        z-index: 1;
+        }
+
+        .bar-2 {
+        float:left;
+        width:100%;
+        background-color:#1f1f1f;
+        height:10px;
+        z-index: 9999;
+        }
+
+        .bar-2{
+	        margin-bottom:15px;
+        }
+        #changeatt, #changeatt:hover { 
+            -moz-user-select: none; 
+            -khtml-user-select: none; 
+            -webkit-user-select: none; 
+            -o-user-select: none;
+            cursor: pointer;
+        }
+
     </style>
 
 </head>
@@ -382,8 +415,10 @@
       Click Open to start open drone carrier
     </div>
 
-    <div id="log" class="text-white progress-label mt-3 fs-2"></div>
-    <div id="bar" class="mx-5"></div>
+    <!-- <div id="log" class="text-white progress-label mt-3 fs-2"></div>
+    <div id="bar" class="mx-5"></div> -->
+    <div class="attendance-cage-css"></div>
+    <div id="changeatt" style="top:50px; left: 100px; position: absolute">Click me</div>
 
     <script src="{{ url_for('static', filename='popper.min.js') }}" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
     <script src="{{ url_for('static', filename='bootstrap.min.js') }}" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
