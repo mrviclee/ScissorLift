@@ -36,7 +36,22 @@
             total_height_ms = total_ms
             height = (height_ms / total_height_ms) * total_height_pixels
             console.log(`Setting bar height to ${height}`)
+            if ($('.attendance-cage-css').height() < height) {
+                while ($('.attendance-cage-css').height() < height) {
+                    inc_bar(1)
+                }
+            } else if ($('.attendance-cage-css').height() > height) {
+                while ($('.attendance-cage-css').height() > height) {
+                    inc_bar(-1)
+                }
+            }
+
             $('.attendance-cage-css').css('height', height);
+        }
+
+        function inc_bar(dir) {
+            console.log(`Bar current height ${$('.attendance-cage-css').height()}`)
+            $('.attendance-cage-css').css('height', $('.attendance-cage-css').height() + 1 * dir);
         }
 
         function set_warning() {
@@ -364,7 +379,7 @@
             position: absolute;
             bottom: 20px;
             z-index: 1;
-            max-height: 80%;
+            max-height: 100%;
         }
         
         .bar-2 {
