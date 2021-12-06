@@ -1,5 +1,8 @@
 # from gyroMonitor import * #g_roll
-from . import gyroMonitor
+if __debug__:
+    from . import gyroMonitor
+else:
+    from . import fake_gyroMonitor as gyroMonitor
 
 # Usage: python3 getGyroTest.py 
 # todo: implement isLevel() functionality to server/client communications for physical operation.

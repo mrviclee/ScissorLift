@@ -3,9 +3,7 @@ from types import coroutine
 from lift.main import cleanup, move_up, move_down, yeet, cleanup, checkIR
 from lift.main import servo1
 from lift.main import servo2
-# from gyro.AngleOMeter import get_gyro, isLevel
 from gyro.getGyroTest import get_gyro, isLevel
-from gyro.gyroMonitor import kill_thread
 import time
 import sys
 from time import sleep
@@ -24,10 +22,14 @@ def shutdown(sig, frame):
     exit(1)
 
 signal.signal(signal.SIGINT, shutdown)
+if not __debug__:
+    moveCount = 0
 
 def move(func, timeout):
+    if not __debug__:
+        sleep(int(timeout) / 1000)
+        return "timeout"
     timeout = int(timeout)
-    print(f"Calling {func}.")
     limit = "No"
     limit = func(servo1, limit, timeout)
     code = limit.split(":")[0]
@@ -36,9 +38,21 @@ def move(func, timeout):
     return True
 
 def lift(timeout="1000"):
+    if not __debug__:
+        global moveCount
+        print("DEBUG: Move count -", moveCount)
+        if moveCount >= 10000:
+            return True
+        moveCount += int(timeout)
     return move(move_up, timeout)
 
 def lower(timeout="1000"):
+    if not __debug__:
+        global moveCount
+        print("DEBUG: Move count -", moveCount)
+        if moveCount <= 0:
+            return True
+        moveCount -= int(timeout)
     return move(move_down, timeout)
 
 def open_lid(durration=1000):
