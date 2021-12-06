@@ -147,30 +147,34 @@
                         "status" : status
                     }
                     motor_socket.send(JSON.stringify(to_send));
-                    if (move_cmd == "lift") {
+                    if (move_cmd == "lift") { // OPENING
                         total_ms_ran += duration
+						$("#state").html(`<h3>Opening</h3>`);
                     } else {
                         total_ms_ran -= duration
                     }
-                    if (move_cmd == "lower") {
+                    if (move_cmd == "lower") { // CLOSING
                         select_button("close");
+						$("#state").html(`<h3>Closing</h3>`);
                     } else if (move_cmd == "lift") {
                         select_button("open");
                     }
-                } else if (data["return"] == true && move_cmd == "lower") { //TODO: Change state to stopped.  Set progrss bar to 0
+                } else if (data["return"] == true && move_cmd == "lower") { //TODO: Change state to stopped.  Set progrss bar to 0. CLOSED
                     total_ms_ran = 0;
                     select_button("stop");
+				    $("#state").html(`<h3>Closed</h3>`);
                     
-                } else if (data["return"] == true && move_cmd == "lift") { //TODO: Disable progress bar.  Ready to launch mode. Set progress bar to 100
+                } else if (data["return"] == true && move_cmd == "lift") { //TODO: Disable progress bar.  Ready to launch mode. Set progress bar to 100. OPENED
                     console.log(data["return"]+" "+move_cmd)
                     select_button("stop");
                     total_ms_ran = total_ms;
                     $("#ready").removeAttr("style")
+				    $("#state").html(`<h3>Opened</h3>`);
                 }
             }
         }
 
-        var maxWidth = 1500;
+        var maxWidth = screen.width;
         var duration = total_ms_ran;
         var $log = $('#log');
         var $open = $('#open');
@@ -246,7 +250,7 @@
             $open.removeAttr("disabled");
 
             select_button("stop");
-
+			
             var $bar = $('#bar');
             $bar.stop();
 
@@ -265,9 +269,25 @@
             pitch = pitch.toFixed(3)
             roll = obj["return"]["roll"] || 0 //TODO: Change colors of and add threshold to pitch and roll
             roll = roll.toFixed(3)
-            
+           	output = "" 
+
             if (pitch != undefined && roll != undefined) {
-                $("#gyro-data").html(`<h3>Pitch: ${pitch} <br> Roll: ${roll}</h3>`);
+				if (pitch < 15){
+					output += `<h3 style="color:green">Pitch: ${pitch}</h3>`
+				} else {
+					output += `<h3 style="color:red">Pitch: ${pitch}</h3>`
+				}
+				output += `<br>`
+				if (roll < 15){
+					output += `<h3 style="color:green">Roll: ${roll}</h3>`
+				} else {
+					output += `<h3 style="color:red">Roll: ${roll}</h3>`
+				}
+				output += `<br>`
+				if (pitch < 15 && roll < 15) {
+					//output += "<h3>Level</h3>"
+				}
+				$("#gyro-data").html(output);
             }
 
             if (Math.abs(pitch) < 15 && Math.abs(roll) < 15) {
@@ -347,6 +367,17 @@
     {% block content %}{% endblock %}
 
     <div class="mx-auto col-sm-8 col-md-4 col-lg-4 col-xl-4">
+      <div class="card mb-4">
+          <div class="card-header">
+           State
+          </div>
+          <div class="card-body">
+          <blockquote class="blockquote mb-0">
+              <p id="state"></p>
+          </blockquote>
+          </div>
+      </div>
+
       <div class="card mb-4">
           <div class="card-header">
           Gyro 
