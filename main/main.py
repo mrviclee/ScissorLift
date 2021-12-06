@@ -109,6 +109,7 @@ def do_nothing():
     return ""
 
 def get_height():
+    sleep(.2)
     print("Movetime:", g_moveTime)
     if g_moveTime >= g_maxTime:
         return -1 #-1 denotes that we are at the top.

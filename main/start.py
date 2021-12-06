@@ -10,7 +10,7 @@ def signal_handler(sig, frame):
 # signal.signal(signal.SIGINT, signal_handler)
 
 if __name__ == "__main__":
-    start_port = 5050
+    start_port = 6050
     childs = []
     mode = "-O" if not __debug__ else ""
     for i in range(3):
