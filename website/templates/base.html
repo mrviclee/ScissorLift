@@ -1,4 +1,5 @@
 <html lang="en">
+
 <head>
     <!-- Required meta tags -->
     <meta charset="utf-8">
@@ -8,24 +9,92 @@
     <script src="{{ url_for('static', filename='socket.io.js') }}" integrity="sha512-aMGMvNYu8Ue4G+fHa359jcPb1u+ytAF+P2SCb+PxrjCdO3n3ZTxJ30zuH39rimUggmTwmh2u7wvQsDTHESnmfQ==" crossorigin="anonymous"></script>
     <script src="{{ url_for('static', filename='jquery-3.3.1.slim.min.js') }}" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
 
-    <link href = "{{ url_for('static', filename='jquery-ui.css') }}" rel = "stylesheet">
-    <script src = "{{ url_for('static', filename='jquery-1.10.2.js') }}"></script>
-    <script src = "{{ url_for('static', filename='jquery-ui.js') }}"></script>  
+    <link href="{{ url_for('static', filename='jquery-ui.css') }}" rel="stylesheet">
+    <script src="{{ url_for('static', filename='jquery-1.10.2.js') }}"></script>
+    <script src="{{ url_for('static', filename='jquery-ui.js') }}"></script>
 
     <script>
         //host = "raspberrypi";
         host = "10.3.141.1";
-        port = 5050;
+        // host = "localhost";
+        port = 6050;
         const motor_socket = new WebSocket(`ws:${host}:${port}`);
         const gyro_socket = new WebSocket(`ws://${host}:${port + 1}`);
         const ir_socket = new WebSocket(`ws:${host}:${port + 2}`);
+        const motor_height_socket = new WebSocket(`ws:${host}:${port}`);
         isOpen = true
         isLevel = false
         isLidOpen = false
         move_cmd = "lower"
         total_ms_ran = 0
-        total_ms = 1 * 60 * 1000 + 43 * 1000
-        inc_value = (1/total_ms) * 1500
+            //total_ms = 1 * 60 * 1000 + 43 * 1000
+        total_ms = 175000
+        current_height = 0
+        error = ""
+        info = {
+            "message" : "unknown",
+            "warnings" : {
+                "isOpen": "",
+                 "isLidOpen": "",
+                 "isLevel": "",
+                 "move_cmd": ""
+            }
+        }
+
+        function set_status() {
+            html = "<h3>"
+            html += info["message"] + "</h3>"
+            console.log(`${info["message"]}`)
+            for (key in info["warnings"]) {
+                if (info["warnings"][key] == "Is not level. Pitch and Roll need to be less than 15 degress") {
+                    html += `<br><h3 style="color:red">` + info["warnings"][key] + "</h3></br>"
+                } else if (info["warnings"][key] == "Warning. Detected lid closed.") {
+                    html += `<br><h3 style="color:red">` + info["warnings"][key] + "</h3></br>"
+                }
+                // html += "<br>" + info["warnings"][key] + "</br>"
+                // console.log(`${key} = ${info["warnings"][key]}`)
+            }
+            $("#state").html(html);
+        }
+
+
+        function set_bar_height(height_ms) {
+            // screen_height = $(window).height() * .8 ;
+            // total_height_pixels = screen_height
+            maxHeightPercent = parseInt($('.attendance-cage-css').css('max-height'))*.01;
+            // total_height_pixels = (screen.height * maxHeightPercent)
+            total_height_pixels = (screen.height * maxHeightPercent)
+            total_height_ms = total_ms
+            height = (height_ms / total_height_ms) * total_height_pixels
+            console.log(`Setting bar height to ${height}`)
+
+            $('.attendance-cage-css').css('height', height);
+
+            $('.attendance-cage-css').css('height', height);
+            if (height_ms == total_ms) {
+                Horloge(total_height_pixels, true);
+            } else {
+                Horloge(total_height_pixels, false);
+            }
+
+        }
+
+        function Horloge(total_pixels, isTop) { 
+            if (isTop) {
+                $('#log').html('100%');
+            } else {
+                var h = $('.attendance-cage-css').height();
+                var percent = parseInt((h * 100) / total_pixels);
+                $('#log').html(percent + ' %');
+            }
+        }
+        /*
+        function inc_bar(dir) {
+            console.log(`Bar current height ${$('.attendance-cage-css').height()}`)
+            $('.attendance-cage-css').css('height', $('.attendance-cage-css').height() + 1 * dir);
+            maxHeight = screen.height * .8;
+            Horloge(maxHeight);
+        }*/
 
         function set_warning() {
             if (!isLevel) {
@@ -40,52 +109,64 @@
             }
         }
 
-        function myLoop() {         //  create a loop function
-          setTimeout(function() {   //  call a 3s setTimeout when the loop is called
-            set_warning();  //  your code here
-            if (true) {           //  if the counter < 10, call the loop function
-              myLoop();             //  ..  again which will trigger another 
-            }                       //  ..  setTimeout()
-          }, 1000)
+        function myLoop() { //  create a loop function
+            setTimeout(function() { //  call a 3s setTimeout when the loop is called
+                set_warning(); //  your code here
+                if (true) { //  if the counter < 10, call the loop function
+                    if (isLevel) {
+                        info["warnings"]["isLevel"] = "isLevel"
+                    } else {
+                        info["warnings"]["isLevel"] = "Is not level. Pitch and Roll need to be less than 15 degress"
+                    }
+                    if (isLidOpen) {
+                        info["warnings"]["isLidOpen"] = "isLidOpen"
+                    } else {
+                        info["warnings"]["isLidOpen"] = "Warning. Detected lid closed."
+                    }
+                    set_status()
+                    myLoop(); //  ..  again which will trigger another 
+
+                } //  ..  setTimeout()
+            }, 1000)
         }
-        
-        myLoop();  
+
+        myLoop();
 
 
-        gyro_socket.onopen = function (event) {
+        gyro_socket.onopen = function(event) {
             to_send = {
-                "cmd" : ""
+                "cmd": ""
             }
             gyro_socket.send(JSON.stringify(to_send));
         }
 
-        ir_socket.onopen = function (event) {
+        ir_socket.onopen = function(event) {
             to_send = {
-                "cmd" : ""
+                "cmd": ""
             }
             ir_socket.send(JSON.stringify(to_send))
         }
 
-        function start_move(direction, timeout=1000) {
+        function start_move(direction, timeout = 1000) {
             move_cmd = direction
             to_send = {
-                "cmd" : direction,
-                "params" : ["0"],
-                "message" : {
-                    "timeout" : timeout,
-                    "total_timeout" : timeout,
-                    "status" : "go"
+                "cmd": direction,
+                "params": ["0"],
+                "message": {
+                    "timeout": timeout,
+                    "total_timeout": timeout,
+                    "status": "go"
                 }
             }
             motor_socket.send(JSON.stringify(to_send));
         }
 
-        function open_proc(timeout=10000) {
+        function open_proc(timeout = 10000) {
 
             if (isLevel) {
                 if (!isLidOpen) {
                     to_send = {
-                        "cmd" : "open"
+                        "cmd": "open"
                     }
                     console.log("Sending open command.")
                     motor_socket.send(JSON.stringify(to_send))
@@ -99,19 +180,19 @@
             console.log("Close lid called");
             if (isLidOpen) {
                 to_send = {
-                    "cmd" : "close",
-                    "params" : [timeout]
+                    "cmd": "close",
+                    "params": [timeout]
                 }
                 console.log("Sending open command.")
                 motor_socket.send(JSON.stringify(to_send))
             }
         }
 
-        function close_proc(lift_timeout=1000, timeout=500, total_time=5000) {
-			console.log("Lowering...")
+        function close_proc(lift_timeout = 1000, timeout = 500, total_time = 5000) {
+            console.log("Lowering...")
             start_move("lower", lift_timeout)
 
-			//var i = 0;                  //  set your counter to 1
+            //var i = 0;                  //  set your counter to 1
 
             //function myLoop() {         //  create a loop function
             //  setTimeout(function() {   //  call a 3s setTimeout when the loop is called
@@ -122,80 +203,126 @@
             //    }                       //  ..  setTimeout()
             //  }, timeout)
             //}
-            
-            //myLoop();  
-            
-            }
 
-        motor_socket.onmessage = function (event) {
+            //myLoop();  
+
+        }
+        
+        motor_height_socket.onopen = function(event) {
+            to_send = {
+                "cmd": "get_height"
+            }
+            motor_height_socket.send(JSON.stringify(to_send))
+        }
+        motor_height_socket.onmessage = function(event) {
+            to_send = {
+                "cmd": "get_height"
+            }
+            data = JSON.parse(event.data)
+            current_height = data["return"]
+            if (current_height == -1) { //Server gives -1 when at top
+                current_height = total_ms
+            }
+            set_bar_height(current_height)
+            motor_height_socket.send(JSON.stringify(to_send))
+        }
+
+        motor_socket.onmessage = function(event) {
             duration = 1000
             to_send = {
-                "cmd" : move_cmd,
-                "params" : [duration]
+                "cmd": move_cmd,
+                "params": [duration]
             }
             data = JSON.parse(event.data);
+            info["message"] = "Stopped"
             if (data["message"] != null && "timeout" in data["message"]) {
+                console.log(`Current height ${current_height}`)
                 timeout = data["message"]["timeout"];
                 total_timeout = data["message"]["total_timeout"];
                 status = data["message"]["status"];
-                console.log(`return: ${data["return"]}, timeout: ${timeout}, status: ${status}, isLevel: ${isLevel}, isOpen: ${isOpen} isLidOpen: ${isLidOpen}, totalMsRan: ${total_ms_ran * inc_value}`);
+                console.log(`return: ${data["return"]}, timeout: ${timeout}, status: ${status}, isLevel: ${isLevel}, isOpen: ${isOpen} isLidOpen: ${isLidOpen}`);
+                if (isLidOpen == false) {
+                    // $("#state").html(`<h3>Closed</h3>`);
+                } else if (isLidOpen){
+                    // $("#state").html(`<h3>Closed</h3>`);
+                }
+
                 if ((data["return"] == "timeout") && (timeout > 0) && isOpen && isLevel && (isLidOpen || move_cmd == "lower")) {
-                    incBar(total_ms_ran * inc_value, 1500)
                     to_send["message"] = {
-                        "timeout" : timeout - duration,
-                        "total_timeout" : total_timeout,
-                        "status" : status
+                        "timeout": timeout - duration,
+                        "total_timeout": total_timeout,
+                        "status": status
                     }
                     motor_socket.send(JSON.stringify(to_send));
                     if (move_cmd == "lift") { // OPENING
                         total_ms_ran += duration
-						$("#state").html(`<h3>Opening</h3>`);
+                        info["message"] = "Opening"
+						// $("#state").html(`<h3>Opening</h3>`);
                     } else {
                         total_ms_ran -= duration
                     }
                     if (move_cmd == "lower") { // CLOSING
-                        select_button("close");
-						$("#state").html(`<h3>Closing</h3>`);
+                        info["message"] = "Closing"
+                        select_button();
+						// $("#state").html(`<h3>Closing</h3>`);
                     } else if (move_cmd == "lift") {
-                        select_button("open");
+                        select_button();
                     }
                 } else if (data["return"] == true && move_cmd == "lower") { //TODO: Change state to stopped.  Set progrss bar to 0. CLOSED
+                    // $("#state").html(`<h3>Closed</h3>`);
+                    info["message"] = "Closed"
                     total_ms_ran = 0;
                     select_button("stop");
-				    $("#state").html(`<h3>Closed</h3>`);
-                    
-                } else if (data["return"] == true && move_cmd == "lift") { //TODO: Disable progress bar.  Ready to launch mode. Set progress bar to 100. OPENED
-                    console.log(data["return"]+" "+move_cmd)
+                } else if (data["return"] == true && move_cmd == "lift") { //TODO: Disable progress bar.  Ready to launch mode. Set progress bar to 100
+                    $('#log').html('100 %');
+                    // $("#state").html(`<h3>Opened. Ready to Launch.</h3>`);
+                    info["message"] = "Opened. Ready to launch drone."
+                    console.log(data["return"] + " " + move_cmd)
                     select_button("stop");
                     total_ms_ran = total_ms;
                     $("#ready").removeAttr("style")
-				    $("#state").html(`<h3>Opened</h3>`);
+                    $('#log').html('100 %');
                 }
             }
         }
-
-        var maxWidth = screen.width;
-        var duration = total_ms_ran;
+        var maxWidth = 1500;
+        // var duration = total_ms_ran;
         var $log = $('#log');
         var $open = $('#open');
         var $stop = $('#stop');
         var timer;
         var width = 0
 
-        function incBar(newWidth, maxWidth) {
-          var $bar = $('#bar');
-          Horloge(maxWidth);
-          if (newWidth <= maxWidth ) {
-            $bar.animate({
-                width: newWidth
-            }, duration, function() {
-                $(this).css('background-color', 'green');
-                $log.html('100 %');
-            });
-          }
-        } 
+        // function incBar(newWidth, maxWidth) {
+        //   var $bar = $('#bar');
+        //   Horloge(maxWidth);
+        //   if (newWidth <= maxWidth ) {
+        //     $bar.animate({
+        //         width: newWidth
+        //     }, duration, function() {
+        //         $(this).css('background-color', 'green');
+        //         $log.html('100 %');
+        //     });
+        //   }
+        // } 
 
         function select_button(button) {
+
+            if (info["message"] == "Opening") { // Open
+                $('#open').removeClass('btn-danger').addClass('btn-success');
+                $('#close').removeClass('btn-success').addClass('btn-danger');
+                $('#stop').removeClass('btn-success').addClass('btn-danger');
+            } else if (info["message"] == "Closing") { // Close
+                console.log("closing button")
+                $('#close').removeClass('btn-danger').addClass('btn-success');
+                $('#stop').removeClass('btn-success').addClass('btn-danger');
+                $('#open').removeClass('btn-success').addClass('btn-danger');
+            } else if (info["message"] == "Stopped") { // Stop
+                $('#stop').removeClass('btn-danger').addClass('btn-success');
+                $('#open').removeClass('btn-success').addClass('btn-danger');
+                $('#close').removeClass('btn-success').addClass('btn-danger');
+            }
+            /*
             if (button == "open") {
                 $('#open').removeClass('btn-danger').addClass('btn-success');
                 $('#close').removeClass('btn-success').addClass('btn-danger');
@@ -209,67 +336,75 @@
                 $('#open').removeClass('btn-success').addClass('btn-danger');
                 $('#close').removeClass('btn-success').addClass('btn-danger');
             }
+            */
         }
 
-        $(function(){
-            $('#open').on('click' , function(){
-              open_proc(total_ms + 30 * 1000)
+        $(function() {
+            $('#open').on('click', function() {
+                // $("#state").html(`<h3>Opening</h3>`);
+                info["message"] = "Opening"
+                open_proc(total_ms + 30 * 1000)
+                width += 20;
 
-              width += 20;
-              incBar(width, maxWidth);
-              // $open.attr('disabled', true);
-              // $stop.removeAttr("disabled");
+                // incBar(width, maxWidth);
+                // $open.attr('disabled', true);
+                // $stop.removeAttr("disabled");
 
-              
-              document.getElementById("open-title").style.display = "none";
-              select_button("open");
+                select_button("open");
             });
 
-        $(function(){
+            $(function() {
 
-          $('#close').on('click' , function(){
-            close_proc(total_ms + 30 * 1000, 500, 2000)
-            $open.removeAttr("disabled");
-            $stop.removeAttr("disabled");
+                $('#close').on('click', function() {
+                    // $("#state").html(`<h3>Closing</h3>`);
+                    info["message"] = "Closing"
+                    close_proc(total_ms + 30 * 1000, 500, 2000)
+                    $open.removeAttr("disabled");
+                    $stop.removeAttr("disabled");
 
-            width -= 20;
-            incBar(width, maxWidth);
+                    // width -= 20;
+                    // incBar(width, maxWidth);
 
-            select_button("close");
-            $("#ready").removeAttr("style").hide();
-          });
+                    select_button("close");
+                    $("#ready").removeAttr("style").hide();
+                });
+            });
+
+
+            $(function() {
+                $('#stop').on('click', function() {
+                    // $("#state").html(`<h3>Stopped</h3>`);
+                    info["message"] = "Stopped"
+                    // send stop command
+                    isOpen = false
+                    setTimeout(() => {
+                        isOpen = true
+                    }, 1000);
+
+                    $stop.attr('disabled', true);
+                    $open.removeAttr("disabled");
+
+                    select_button("stop");
+
+                    // var $bar = $('#bar');
+                    // $bar.stop();
+
+                    // clearInterval(timer);
+
+                    // var w = $bar.width();
+                    // var percent = parseInt((w * 100) / maxWidth);
+                    // $log.html(percent + ' %');
+                });
+            });
         });
 
-        $(function(){
-          $('#stop').on('click' , function(){
-            // send stop command
-            isOpen = false
-            setTimeout( ()=> {isOpen = true}, 1000);
-
-            $stop.attr('disabled', true);
-            $open.removeAttr("disabled");
-
-            select_button("stop");
-			
-            var $bar = $('#bar');
-            $bar.stop();
-
-            clearInterval(timer);
-
-            var w = $bar.width();
-            var percent = parseInt((w * 100) / maxWidth);
-            $log.html(percent + ' %');
-          });
-        });
-      });
-
-        gyro_socket.onmessage = function (event) {
+        gyro_socket.onmessage = function(event) {
             var obj = JSON.parse(event.data);
             pitch = obj["return"]["pitch"] || 0
             pitch = pitch.toFixed(3)
             roll = obj["return"]["roll"] || 0 //TODO: Change colors of and add threshold to pitch and roll
             roll = roll.toFixed(3)
-           	output = "" 
+            output = ""
 
             if (pitch != undefined && roll != undefined) {
 				if (pitch < 15){
@@ -296,12 +431,12 @@
                 isLevel = false;
             }
             to_send = {
-                "cmd" : "get_gyro"
+                "cmd": "get_gyro"
             }
             gyro_socket.send(JSON.stringify(to_send));
         }
 
-        ir_socket.onmessage = function (event) {
+        ir_socket.onmessage = function(event) {
             var obj = JSON.parse(event.data);
             //console.log(`ir data: ${obj["return"]}`);
             if (obj["return"]) {
@@ -316,21 +451,16 @@
                 $("#ir-data").html(`<h3>Lid detected.</h3>`);
             }
             to_send = {
-                "cmd" : "is_open"
+                "cmd": "is_open"
             }
             ir_socket.send(JSON.stringify(to_send))
-        }
-
-        function Horloge(maxWidth) { var w = $('#bar').width();
-            var percent = parseInt((w * 100) / maxWidth);
-            $('#log').html(percent + ' %');
         }
 
     </script>
 
 
     <style>
-      .progress-label {
+        /* .progress-label {
         position: inherit;
         left: 0%;
         top: 13px;
@@ -342,21 +472,81 @@
         height:25px;
         border:1px solid black;
         border-radius:3px;
+      } */
+        
+        .attendance-cage-css {
+            width: 10%;
+            float: left;
+            background-color: #6ae719;
+            height: 0px;
+            position: absolute;
+            bottom: 20px;
+            z-index: 1;
+            max-height: 85%;
+            margin-left: 10px;
+        }
+        .attendance-cage-cssB {
+            width: 10%;
+            float: left;
+            background-color: transparent;
+            height: 0px;
+            position: absolute;
+            bottom: 20px;
+            z-index: 1;
+            max-height: 85%;
+            margin-left: 10px;
+            min-height: 85%;
+            border-style: solid;
+        }
+        
+        .bar-2 {
+            float: left;
+            width: 100%;
+            background-color: #1f1f1f;
+            height: 10px;
+            z-index: 9999;
+        }
+        
+        .bar-2 {
+            margin-bottom: 15px;
+        }
+        
+        #changeatt,
+        #changeatt:hover {
+            -moz-user-select: none;
+            -khtml-user-select: none;
+            -webkit-user-select: none;
+            -o-user-select: none;
+            cursor: pointer;
+        }
+        @media (max-width: 767px) {
+        #logo {
+          display: none;
+        }
+        #cards-data {
+            margin-left: 75px;
+            margin-right: 75px;
+        }
+
       }
     </style>
 
 </head>
 
 <nav class="navbar navbar-light bg-light">
-  <nav class="navbar navbar-light bg-light">
-    <p class="navbar-brand mx-3 my-0 pb-0 fs-2">DRONE VALET</p>
-  </nav>
+    <nav class="navbar navbar-light bg-light">
+        <p class="navbar-brand mx-3 my-0 pb-0 fs-2">DRONE VALET</p>
+    </nav>
 </nav>
 
 <body class="bg-primary text-center">
     <div>
-        <img src="{{url_for('static', filename='drone-valet.png')}}" align="middle" class="mt-5"/>
+        <img id="logo" src="{{url_for('static', filename='drone-valet.png')}}" align="middle" class="mt-5" />
     </div>
+
+    <!-- <div id="open-title" class="text-white progress-label mt-4 fs-1">
+        Click Open to start open drone carrier
+    </div> -->
 
     <div class="d-flex justify-content-center my-4">
         <button id="open" type="button" name="Open" value="open" class="btn btn-danger mx-4"> Open </button>
@@ -366,7 +556,7 @@
 
     {% block content %}{% endblock %}
 
-    <div class="mx-auto col-sm-8 col-md-4 col-lg-4 col-xl-4">
+    <div id="cards-data" class="mx-sm-5 mx-md-auto col-sm-8 col-md-4 col-lg-4 col-xl-4">
       <div class="card mb-4">
           <div class="card-header">
            State
@@ -374,13 +564,14 @@
           <div class="card-body">
           <blockquote class="blockquote mb-0">
               <p id="state"></p>
+              Percentage Up: <p id="log" class="text-black progress-label mt-3 fs-2">0%</p>
           </blockquote>
           </div>
       </div>
 
       <div class="card mb-4">
           <div class="card-header">
-          Gyro 
+            Gyroscope
           </div>
           <div class="card-body">
           <blockquote class="blockquote mb-0">
@@ -389,7 +580,7 @@
           </div>
       </div>
 
-      <div class="card">
+      <div class="card mb-4">
           <div class="card-header">
           IR Sensor
           </div>
@@ -409,15 +600,15 @@
 
     <!-- http://jsfiddle.net/sylouuu/V7a3Y/15/ -->
 
-    <div id="open-title" class="text-white progress-label mt-4 fs-1">
-      Click Open to start open drone carrier
-    </div>
 
-    <div id="log" class="text-white progress-label mt-3 fs-2"></div>
-    <div id="bar" class="mx-5"></div>
+    <!-- <div id="log" class="text-white progress-label mt-3 fs-2">0%</div> -->
+    <!-- <div id="bar" class="mx-5"></div> -->
+    <div class="attendance-cage-css"></div>
+    <div class="attendance-cage-cssB"></div>
 
     <script src="{{ url_for('static', filename='popper.min.js') }}" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
     <script src="{{ url_for('static', filename='bootstrap.min.js') }}" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 
 </body>
+
 </html>

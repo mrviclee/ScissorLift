@@ -3,9 +3,7 @@ from types import coroutine
 from lift.main import cleanup, move_up, move_down, yeet, cleanup, checkIR
 from lift.main import servo1
 from lift.main import servo2
-# from gyro.AngleOMeter import get_gyro, isLevel
 from gyro.getGyroTest import get_gyro, isLevel
-from gyro.gyroMonitor import kill_thread
 import time
 import sys
 from time import sleep
@@ -24,15 +22,48 @@ def shutdown(sig, frame):
     exit(1)
 
 signal.signal(signal.SIGINT, shutdown)
+g_moveTime = 0
+if not __debug__:
+    g_maxTime = 150000
+else:
+    g_maxTime = 150000
+
+def get_direction_from(func): #only returns "down" or "up"
+    if "down" in func.__name__:
+        return "down"
+    elif "up" in func.__name__:
+        return "up"
+    else:
+        return RuntimeError(f"Invalid fucntion name {func.__name__}")
 
 def move(func, timeout):
+    global g_moveTime
     timeout = int(timeout)
-    print(f"Calling {func}.")
+    dir = get_direction_from(func)
+    print("direction is", dir)
+
     limit = "No"
-    limit = func(servo1, limit, timeout)
+    if __debug__:
+        limit = func(servo1, limit, timeout)
+    else:
+        if g_moveTime >= g_maxTime and dir == "up":
+            limit = "Success"
+        elif g_moveTime <= 0 and dir == "down":
+            limit = "Success"
+        else:
+            sleep(timeout / 1000)
+            limit = "Failed:timeout"
     code = limit.split(":")[0]
     if code != "Success":
+        if dir == "up":
+            g_moveTime += timeout
+        else:
+            g_moveTime -= timeout
         return limit.split(":")[1]
+    if dir == "down":
+        g_moveTime = 0
+    else:
+        g_moveTime = g_maxTime
     return True
 
 def lift(timeout="1000"):
@@ -77,6 +108,13 @@ def do_nothing():
     pass
     return ""
 
+def get_height():
+    sleep(.01)
+    print("Movetime:", g_moveTime)
+    if g_moveTime >= g_maxTime:
+        return -1 #-1 denotes that we are at the top.
+    return g_moveTime
+
 function_map = {
         "hello" : get_hello,
         "lift" : lift,
@@ -88,6 +126,7 @@ function_map = {
         "lower" : lower,
         "get_gyro" : get_gyro,
         "close": close_lid,
+        "get_height" : get_height,
     }
 
 async def handle_connection(conn):
